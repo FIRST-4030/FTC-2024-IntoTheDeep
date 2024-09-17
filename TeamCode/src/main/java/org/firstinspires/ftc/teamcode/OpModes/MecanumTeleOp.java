@@ -41,7 +41,6 @@ public class MecanumTeleOp extends OpMode {
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
     //I chose to use a hashmap for human readability, even if it adds more lines of code, unsure if this was the correct choice but hey, I made it
-    HashMap<String, Double> dpadPowerMap = new HashMap<>();
     double[] dpadPowerArray = new double[4];
     double powerCoefficient = 1;
     boolean precisionDrive = false;
