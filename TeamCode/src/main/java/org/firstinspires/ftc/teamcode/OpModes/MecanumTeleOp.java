@@ -25,7 +25,7 @@ public class MecanumTeleOp extends OpMode {
     InputHandler inputHandler;
     Vector3d mecanumController;
 
-    double driveCoefficient = 1;
+    double driveCoefficient = 0.8;
     IMU imu;
     Orientation or;
     IMU.Parameters myIMUparameters;
@@ -72,8 +72,8 @@ public class MecanumTeleOp extends OpMode {
         mecanumController = new Vector3d();
 
         //Initialize encoder wheels
-        paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
-        paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
+        //paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
     }
 
@@ -85,6 +85,10 @@ public class MecanumTeleOp extends OpMode {
         previousTime += deltaTime;
 
         telemetry.addData("deltatime: ", deltaTime);
+        telemetry.addData("Joystick X ", gamepad1.right_stick_x);
+        telemetry.addData("Joystick Y ", gamepad1.right_stick_y);
+        telemetry.addData("Joystick Z ", gamepad1.left_stick_x);
+
 
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
@@ -96,7 +100,6 @@ public class MecanumTeleOp extends OpMode {
         telemetry.update();
         outputLog();
     }
-
     public void handleInput() {
         inputHandler.loop();
         mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
@@ -109,12 +112,14 @@ public class MecanumTeleOp extends OpMode {
             resetHeading = true;
             headingTimer.reset();
         }
+
         if(resetHeading){
             if(headingTimer.milliseconds() > 250){
                 globalIMUHeading = or.thirdAngle;
                 resetHeading = false;
             }
         }
+
     }
     public void outputLog() {
 
