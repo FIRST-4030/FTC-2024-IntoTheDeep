@@ -92,8 +92,6 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("right encoder position: ", drive.rightBack.getCurrentPosition());
         telemetry.addData("strafe encoder position: ", drive.rightFront.getCurrentPosition());
 
-
-
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
         telemetry.addData("error: ", headingError);
