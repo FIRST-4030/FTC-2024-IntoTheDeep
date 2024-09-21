@@ -69,17 +69,18 @@ public class NewMecanumDrive {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
 
         // drive model parameters
-        public double inPerTick = 1;
-        public double lateralInPerTick = inPerTick;
-        public double trackWidthTicks = 0;
+        public double inPerTick = 0.00116623;
+        public double lateralInPerTick = 0.000971214610491714;
+        public double trackWidthTicks = 472.4435101935963;
 
         // feedforward parameters (in tick units)
-        public double kS = 0;
-        public double kV = 0;
-        public double kA = 0;
+        ////kV: 0.00011135229685902548, kS: 0.66430156101445
+        public double kS = 0.66430156101445;
+        public double kV = 0.00011135229685902548;
+        public double kA = 0.000009;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -301,7 +302,7 @@ public class NewMecanumDrive {
             holdHeading(headingError);
         }
 
-        convertToFieldCentric();
+        //convertToFieldCentric();
         //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
         leftFront.setPower((joystickY + joystickX + joystickR)/normalization);

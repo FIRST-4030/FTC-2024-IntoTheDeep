@@ -25,7 +25,7 @@ public class MecanumTeleOp extends OpMode {
     InputHandler inputHandler;
     Vector3d mecanumController;
 
-    double driveCoefficient = 0.8;
+    double driveCoefficient = 1;
     IMU imu;
     Orientation or;
     IMU.Parameters myIMUparameters;
@@ -87,6 +87,10 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("Joystick X ", gamepad1.right_stick_x);
         telemetry.addData("Joystick Y ", gamepad1.right_stick_y);
         telemetry.addData("Joystick Z ", gamepad1.left_stick_x);
+
+        telemetry.addData("par0: ", drive.rightBack.getCurrentPosition());
+        telemetry.addData("par1: ", drive.leftBack.getCurrentPosition());
+        telemetry.addData("perp ", drive.rightFront.getCurrentPosition());
 
 
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
