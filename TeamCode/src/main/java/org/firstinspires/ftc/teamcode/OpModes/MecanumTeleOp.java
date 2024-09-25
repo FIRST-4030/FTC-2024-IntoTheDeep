@@ -33,7 +33,7 @@ public class MecanumTeleOp extends OpMode {
     ElapsedTime headingTimer = new ElapsedTime();
     double deltaTime;
     double previousTime;
-    // test
+
     double globalIMUHeading;
     double headingError = 0;
     boolean resetIMU = false;
