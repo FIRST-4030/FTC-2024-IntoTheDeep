@@ -80,7 +80,6 @@ public class MecanumTeleOp extends OpMode {
                 1390, false);
         liftRotation = new LinearMotorController(hardwareMap, "swing",
                 9000, false);
-        //clawServo = hardwareMap.get(Servo.class, "clawServo");
 
         //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);
@@ -147,11 +146,7 @@ public class MecanumTeleOp extends OpMode {
             }
         }
         if(inputHandler.up("D2:X")){
-            /*if(clawOpen){
-                clawServo.setPosition(0.7);
-            } else {
-                clawServo.setPosition(0.3);
-            }*/
+
         }
 
         if(inputHandler.up("D2:Y")){
