@@ -43,6 +43,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -72,14 +73,14 @@ public class NewMecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
 
         // drive model parameters
-        public double inPerTick = 0.00116623;
-        public double lateralInPerTick = 0.000971214610491714;
-        public double trackWidthTicks = 472.4435101935963;
+        public double inPerTick = 0.00057336671;
+        public double lateralInPerTick = 0.0004852192942301951; //Not used Roadrunner lateral tuning, potentially bad
+        public double trackWidthTicks = 28132;
 
         // feedforward parameters (in tick units)
-        ////kV: 0.00011135229685902548, kS: 0.66430156101445
-        public double kS = 0.66430156101445;
-        public double kV = 0.00011135229685902548;
+        //kV: 0.00010920853856016985, kS: 0.6733835719712635
+        public double kS = 0.6733835719712635;
+        public double kV = 0.00010920853856016985;
         public double kA = 0.000009;
 
         // path profile parameters (in inches)
@@ -92,13 +93,13 @@ public class NewMecanumDrive {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double axialGain = 8.0;
+        public double lateralGain = 15.0;
+        public double headingGain = 15.0; // shared with turn
 
-        public double axialVelGain = 0.0;
-        public double lateralVelGain = 0.0;
-        public double headingVelGain = 0.0; // shared with turn
+        public double axialVelGain = 0.0; //0.3;
+        public double lateralVelGain = 0.0; //0.5;
+        public double headingVelGain = 0.0; //0.5 // shared with turn
     }
 
     public static Params PARAMS = new Params();
@@ -117,6 +118,7 @@ public class NewMecanumDrive {
             new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
 
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
+    public DcMotorEx liftExtender, liftRotator;
 
     public final VoltageSensor voltageSensor;
 
@@ -243,6 +245,7 @@ public class NewMecanumDrive {
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
 
+
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -250,8 +253,8 @@ public class NewMecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFront.setDirection(DcMotor.Direction.REVERSE);
-        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         lazyImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
@@ -263,7 +266,7 @@ public class NewMecanumDrive {
         teleOpImu.initialize(parameters);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick);
+        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -285,7 +288,7 @@ public class NewMecanumDrive {
         //y values are inverted
         joystickY = -1 * Math.pow(control.y, 3);
         joystickX = Math.pow(control.x, 3);
-        joystickR = control.z * 0.33;
+        joystickR = control.z;
         //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];

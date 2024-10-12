@@ -6,24 +6,30 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.LinearMotorController;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
 
-import java.util.HashMap;
 // aza test line to check commit
 @TeleOp
 public class MecanumTeleOp extends OpMode {
+
+    final int LIFT_ROT_COEFFICIENT = 58;
+    final int LIFT_EXT_COEFFICIENT = 30;
     NewMecanumDrive drive;
     InputHandler inputHandler;
     Vector3d mecanumController;
+    LinearMotorController liftRotation, liftExtension;
+    Servo clawServo;
 
     double driveCoefficient = 1;
     IMU imu;
@@ -45,6 +51,12 @@ public class MecanumTeleOp extends OpMode {
     double powerCoefficient = 1;
     boolean precisionDrive = false;
     boolean resetHeading = false;
+    boolean clawOpen = true;
+
+    double liftRotControl = 0;
+    double liftExtControl = 0;
+
+
     DcMotor paralellEncoder;
 
 
@@ -52,6 +64,7 @@ public class MecanumTeleOp extends OpMode {
     public void init() {
         //init dpad hashmap with each dpad value as unpressed
         imu = hardwareMap.get(IMU.class, "imu");
+
         /*imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP
@@ -63,6 +76,11 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0));
+        liftExtension = new LinearMotorController(hardwareMap, "slide",
+                1390, false);
+        liftRotation = new LinearMotorController(hardwareMap, "swing",
+                9000, false);
+        //clawServo = hardwareMap.get(Servo.class, "clawServo");
 
         //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);
@@ -88,14 +106,10 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("Joystick Y ", gamepad1.right_stick_y);
         telemetry.addData("Joystick Z ", gamepad1.left_stick_x);
 
-        telemetry.addData("par0: ", drive.rightBack.getCurrentPosition());
-        telemetry.addData("par1: ", drive.leftBack.getCurrentPosition());
+        telemetry.addData("par: ", drive.rightBack.getCurrentPosition());
         telemetry.addData("perp ", drive.rightFront.getCurrentPosition());
 
 
-        telemetry.addData("left encoder position: ", drive.leftBack.getCurrentPosition());
-        telemetry.addData("right encoder position: ", drive.rightBack.getCurrentPosition());
-        telemetry.addData("strafe encoder position: ", drive.rightFront.getCurrentPosition());
 
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
@@ -103,6 +117,10 @@ public class MecanumTeleOp extends OpMode {
 
         //Main Drive Update Code: :)
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
+        liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
+        liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
+        telemetry.addData("Rot: ", liftRotation.target);
+        telemetry.addData("Ext: ", liftExtension.target);
 
         telemetry.update();
         outputLog();
@@ -110,6 +128,8 @@ public class MecanumTeleOp extends OpMode {
     public void handleInput() {
         inputHandler.loop();
         mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+        liftRotControl = gamepad2.left_stick_y;
+        liftExtControl = gamepad2.right_stick_y;
         //Reset Field-Centric drive by pressing B
         if(inputHandler.up("D1:B")){
             resetIMU = true;
@@ -126,6 +146,18 @@ public class MecanumTeleOp extends OpMode {
                 resetHeading = false;
             }
         }
+        if(inputHandler.up("D2:X")){
+            /*if(clawOpen){
+                clawServo.setPosition(0.7);
+            } else {
+                clawServo.setPosition(0.3);
+            }*/
+        }
+
+        if(inputHandler.up("D2:Y")){
+            liftRotation.setTarget(9000);
+        }
+
 
     }
     public void outputLog() {
