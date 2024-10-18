@@ -55,6 +55,12 @@ public class MecanumTeleOp extends OpMode {
 
     double liftRotControl = 0;
     double liftExtControl = 0;
+    double yawToFix;
+    double cleanYaw;
+    double priorYaw = 0;
+    double deltaYaw;
+    double savedOrientation;
+    boolean quickRot = false;
 
 
     DcMotor paralellEncoder;
@@ -64,6 +70,9 @@ public class MecanumTeleOp extends OpMode {
     public void init() {
         //init dpad hashmap with each dpad value as unpressed
         imu = hardwareMap.get(IMU.class, "imu");
+        clawServo = hardwareMap.get(Servo.class, "claw");
+        clawServo.setPosition(0.3);
+
 
         /*imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -111,7 +120,12 @@ public class MecanumTeleOp extends OpMode {
 
 
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+
         headingError = or.thirdAngle - globalIMUHeading;
+        if(headingError > Math.PI) deltaYaw -= 2*Math.PI;
+        else if(headingError < -Math.PI) deltaYaw +=Math.PI;
+
+
         telemetry.addData("error: ", headingError);
 
         //Main Drive Update Code: :)
@@ -146,12 +160,26 @@ public class MecanumTeleOp extends OpMode {
             }
         }
         if(inputHandler.up("D2:X")){
-
+            if(clawOpen){
+                clawServo.setPosition(0);
+                clawOpen = !clawOpen;
+            } else {
+                clawServo.setPosition(0.3);
+                clawOpen = !clawOpen;
+            }
         }
 
         if(inputHandler.up("D2:Y")){
             liftRotation.setTarget(9000);
         }
+
+        if(inputHandler.up("D1:RB")){
+            globalIMUHeading = savedOrientation + Math.PI/2;
+            savedOrientation = or.thirdAngle;
+        }
+
+
+
 
 
     }
