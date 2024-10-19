@@ -238,12 +238,8 @@ public class MecanumTeleOp extends OpMode {
         }
         if(liftRotation.getLiftMotor().getCurrentPosition() <= 2900)
         {
-            liftExtension.setTarget(900);
-            liftNotAtPosition = false;
-        }
-        if(liftExtension.getLiftMotor().getCurrentPosition() <= 900)
-        {
             clawServo.setPosition(0.3);
+            liftNotAtPosition = false;
             scoreSpecimen = false;
         }
 
