@@ -252,6 +252,11 @@ public class MecanumTeleOp extends OpMode {
         liftExtension.setTarget(1);
         wrist.setPosition(0.4);
     }
+    public void sampleColloectionPos() {
+        liftRotation.setTarget(1000);
+        liftExtension.setTarget(300);
+        wrist.setPosition(0.1);
+    }
     public void postSpecimenScoringPos() {
         if(liftNotAtPosition){
         liftRotation.setTarget(2900);
