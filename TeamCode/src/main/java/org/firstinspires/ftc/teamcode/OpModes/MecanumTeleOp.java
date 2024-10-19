@@ -174,8 +174,7 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D1:RB")){
-            globalIMUHeading = savedOrientation + Math.PI/2;
-            savedOrientation = or.thirdAngle;
+            globalIMUHeading = or.thirdAngle + Math.PI/2;
         }
 
 
