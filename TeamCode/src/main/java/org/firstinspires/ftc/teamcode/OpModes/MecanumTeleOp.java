@@ -29,7 +29,7 @@ public class MecanumTeleOp extends OpMode {
     InputHandler inputHandler;
     Vector3d mecanumController;
     LinearMotorController liftRotation, liftExtension;
-    Servo clawServo;
+    Servo clawServo, wrist;
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  0.8;     // Maximum rotational position
     static final double MIN_POS     =  0.3;     // Minimum rotational position
@@ -48,11 +48,12 @@ public class MecanumTeleOp extends OpMode {
     double deltaTime;
     double previousTime;
     boolean liftNotAtPosition = true;
-    boolean scoreSpecimen = true;
+    boolean scoreSpecimen = false;
 
     double globalIMUHeading;
     double headingError = 0;
     boolean resetIMU = false;
+    boolean wristTest = true;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -82,6 +83,8 @@ public class MecanumTeleOp extends OpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         clawServo = hardwareMap.get(Servo.class, "claw");
         clawServo.setPosition(0.3);
+        wrist = hardwareMap.get(Servo.class, "wrist");
+        wrist.setPosition(1);
 
 
         /*imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
@@ -149,6 +152,7 @@ public class MecanumTeleOp extends OpMode {
 
         telemetry.addData("par: ", drive.rightBack.getCurrentPosition());
         telemetry.addData("perp ", drive.rightFront.getCurrentPosition());
+        telemetry.addData("motor ticks: ", liftRotation.getLiftMotor().getCurrentPosition());
 
 
 
@@ -201,20 +205,33 @@ public class MecanumTeleOp extends OpMode {
         }
         if(inputHandler.up("D2:X")){
             if(clawOpen){
-                clawServo.setPosition(0);
+                clawServo.setPosition(0.3);
                 clawOpen = !clawOpen;
             } else {
-                clawServo.setPosition(0.3);
+                clawServo.setPosition(0.75);
                 clawOpen = !clawOpen;
             }
         }
 
-        if(inputHandler.up("D2:Y")){
+        if(inputHandler.up("D2:A")){
             specimenCollectionPos();
+        }
+        if(inputHandler.up("D2:RT")){
+            preSpecimenScoringPos();
         }
 
         if(inputHandler.up("D1:RB")){
             globalIMUHeading = or.thirdAngle + Math.PI/2;
+        }
+
+        if(inputHandler.up("D2:LB")){
+            if(wristTest){
+                wrist.setPosition(1);
+                wristTest = !wristTest;
+            } else {
+                wrist.setPosition(0);
+                wristTest = !wristTest;
+            }
         }
 
 
@@ -227,10 +244,13 @@ public class MecanumTeleOp extends OpMode {
         liftRotation.setTarget(1330);
         liftExtension.setTarget(500);
         clawServo.setPosition(0.3);
+        clawOpen = false;
+        wrist.setPosition(0.5);
     }
     public void preSpecimenScoringPos(){
         liftRotation.setTarget(3000);
-        liftExtension.setTarget(1020);
+        liftExtension.setTarget(1);
+        wrist.setPosition(0.4);
     }
     public void postSpecimenScoringPos() {
         if(liftNotAtPosition){
