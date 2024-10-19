@@ -30,6 +30,13 @@ public class MecanumTeleOp extends OpMode {
     Vector3d mecanumController;
     LinearMotorController liftRotation, liftExtension;
     Servo clawServo;
+    static final int    CYCLE_MS    =   50;     // period of each cycle
+    static final double MAX_POS     =  0.8;     // Maximum rotational position
+    static final double MIN_POS     =  0.3;     // Minimum rotational position
+
+    // Define class members
+    double  position = ((MAX_POS - MIN_POS) / 2)+0.01; // Start at halfway position
+    boolean rampUp = true;
 
     double driveCoefficient = 1;
     IMU imu;
@@ -37,8 +44,11 @@ public class MecanumTeleOp extends OpMode {
     IMU.Parameters myIMUparameters;
     ElapsedTime timer = new ElapsedTime();
     ElapsedTime headingTimer = new ElapsedTime();
+    ElapsedTime clawTimer;
     double deltaTime;
     double previousTime;
+    boolean liftNotAtPosition = true;
+    boolean scoreSpecimen = true;
 
     double globalIMUHeading;
     double headingError = 0;
@@ -90,6 +100,11 @@ public class MecanumTeleOp extends OpMode {
         liftRotation = new LinearMotorController(hardwareMap, "swing",
                 9000, false);
 
+
+
+
+        clawTimer = new ElapsedTime();
+
         //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
@@ -108,6 +123,24 @@ public class MecanumTeleOp extends OpMode {
 
         deltaTime = timer.milliseconds() - previousTime;
         previousTime += deltaTime;
+
+        if (gamepad2.a && clawTimer.seconds() > 0.5) {
+            clawTimer.reset();
+            if (rampUp) {
+                position = MAX_POS;
+                rampUp = !rampUp;   // Switch ramp direction
+            }
+            else {
+                position = MIN_POS;
+                rampUp = !rampUp;  // Switch ramp direction
+            }
+        }
+
+        // Display the current value
+        telemetry.addData("Servo Position", "%5.2f", position);
+        telemetry.addData("time", clawTimer.seconds());
+        telemetry.addData(">", "Press Stop to end test." );
+        telemetry.update();
 
         telemetry.addData("deltatime: ", deltaTime);
         telemetry.addData("Joystick X ", gamepad1.right_stick_x);
@@ -153,6 +186,13 @@ public class MecanumTeleOp extends OpMode {
             headingTimer.reset();
         }
 
+        if(inputHandler.up("D2:Y")){
+            scoreSpecimen = true;
+            liftNotAtPosition = true;
+        }
+
+        if(scoreSpecimen){ postSpecimenScoringPos();}
+
         if(resetHeading){
             if(headingTimer.milliseconds() > 250){
                 globalIMUHeading = or.thirdAngle;
@@ -170,7 +210,7 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D2:Y")){
-            liftRotation.setTarget(9000);
+            specimenCollectionPos();
         }
 
         if(inputHandler.up("D1:RB")){
@@ -182,15 +222,34 @@ public class MecanumTeleOp extends OpMode {
 
 
     }
+
+    public void specimenCollectionPos(){
+        liftRotation.setTarget(1330);
+        liftExtension.setTarget(500);
+        clawServo.setPosition(0.3);
+    }
+    public void preSpecimenScoringPos(){
+        liftRotation.setTarget(3000);
+        liftExtension.setTarget(1020);
+    }
+    public void postSpecimenScoringPos() {
+        if(liftNotAtPosition){
+        liftRotation.setTarget(2900);
+        }
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2900)
+        {
+            liftExtension.setTarget(900);
+            liftNotAtPosition = false;
+        }
+        if(liftExtension.getLiftMotor().getCurrentPosition() <= 900)
+        {
+            clawServo.setPosition(0.3);
+            scoreSpecimen = false;
+        }
+
+    }
+
     public void outputLog() {
 
     }
 }
-
-
-
-
-
-
-
-
