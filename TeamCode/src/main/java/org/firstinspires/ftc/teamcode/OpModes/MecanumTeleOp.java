@@ -101,7 +101,7 @@ public class MecanumTeleOp extends OpMode {
         liftExtension = new LinearMotorController(hardwareMap, "slide",
                 1390, false);
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                9000, false);
+                4500, false);
 
 
 
@@ -195,7 +195,13 @@ public class MecanumTeleOp extends OpMode {
             liftNotAtPosition = true;
         }
 
-        if(scoreSpecimen){ postSpecimenScoringPos();}
+        if(inputHandler.up("D2:LT")){
+            sampleColloectionPos();
+        }
+
+        if(scoreSpecimen){
+            postSpecimenScoringPos();
+        }
 
         if(resetHeading){
             if(headingTimer.milliseconds() > 250){
@@ -226,7 +232,7 @@ public class MecanumTeleOp extends OpMode {
 
         if(inputHandler.up("D2:LB")){
             if(wristTest){
-                wrist.setPosition(1);
+                wrist.setPosition(0.9);
                 wristTest = !wristTest;
             } else {
                 wrist.setPosition(0);
@@ -249,19 +255,19 @@ public class MecanumTeleOp extends OpMode {
     }
     public void preSpecimenScoringPos(){
         liftRotation.setTarget(3000);
-        liftExtension.setTarget(1);
+        liftExtension.setTarget(150);
         wrist.setPosition(0.4);
     }
     public void sampleColloectionPos() {
-        liftRotation.setTarget(1000);
+        liftRotation.setTarget(750);
         liftExtension.setTarget(300);
-        wrist.setPosition(0.1);
+        wrist.setPosition(0.3);
     }
     public void postSpecimenScoringPos() {
         if(liftNotAtPosition){
-        liftRotation.setTarget(2900);
+        liftRotation.setTarget(2400);
         }
-        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2900)
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2500)
         {
             clawServo.setPosition(0.3);
             liftNotAtPosition = false;
