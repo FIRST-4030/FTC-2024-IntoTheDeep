@@ -53,7 +53,7 @@ public class MecanumTeleOp extends OpMode {
     double globalIMUHeading;
     double headingError = 0;
     boolean resetIMU = false;
-    boolean wristTest = true;
+    boolean hanging = false;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -71,7 +71,6 @@ public class MecanumTeleOp extends OpMode {
     double priorYaw = 0;
     double deltaYaw;
     double savedOrientation;
-    boolean quickRot = false;
 
 
     DcMotor paralellEncoder;
@@ -122,6 +121,11 @@ public class MecanumTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        if(liftExtension.getLiftMotor().getCurrentPosition() > 200){
+            driveCoefficient = 0.5;
+        } else {
+            driveCoefficient = 1;
+        }
         handleInput();
 
         deltaTime = timer.milliseconds() - previousTime;
@@ -178,8 +182,13 @@ public class MecanumTeleOp extends OpMode {
     public void handleInput() {
         inputHandler.loop();
         mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+
         liftRotControl = gamepad2.left_stick_y;
-        liftExtControl = gamepad2.right_stick_y;
+
+        if(!hanging) {
+            liftExtControl = gamepad2.right_stick_y;
+        }
+
         //Reset Field-Centric drive by pressing B
         if(inputHandler.up("D1:B")){
             resetIMU = true;
@@ -210,11 +219,11 @@ public class MecanumTeleOp extends OpMode {
             }
         }
         if(inputHandler.up("D2:X")){
-            if(clawOpen){
+            if(!clawOpen){
                 clawServo.setPosition(0.3);
                 clawOpen = !clawOpen;
             } else {
-                clawServo.setPosition(0.75);
+                clawServo.setPosition(0.95);
                 clawOpen = !clawOpen;
             }
         }
@@ -230,14 +239,15 @@ public class MecanumTeleOp extends OpMode {
             globalIMUHeading = or.thirdAngle + Math.PI/2;
         }
 
+        if(inputHandler.up("D1:LB")){
+            globalIMUHeading = or.thirdAngle - Math.PI/2;
+        }
+
         if(inputHandler.up("D2:LB")){
-            if(wristTest){
-                wrist.setPosition(0.9);
-                wristTest = !wristTest;
-            } else {
-                wrist.setPosition(0);
-                wristTest = !wristTest;
-            }
+            highBasket();
+        }
+        if(inputHandler.up("D1:LT")){
+            beginHang();
         }
 
 
@@ -246,18 +256,45 @@ public class MecanumTeleOp extends OpMode {
 
     }
 
+    public void beginHang(){
+        if(hanging){
+            hanging = false;
+            liftRotation.setTickLimit(4500);
+            liftRotation.setTarget(4500);
+        } else {
+            hanging = true;
+            liftRotation.setTickLimit(5250);
+            liftRotation.setTarget(5000);
+            liftExtension.setTarget(5);
+            clawServo.setPosition(0.1);
+
+        }
+    }
+
     public void specimenCollectionPos(){
         liftRotation.setTarget(1330);
         liftExtension.setTarget(500);
-        clawServo.setPosition(0.3);
+        clawServo.setPosition(0.95);
         clawOpen = false;
         wrist.setPosition(0.5);
     }
+
+    public void highBasket() {
+        wrist.setPosition(0.775);
+        clawServo.setPosition(0.95);
+        clawOpen = false;
+        liftRotation.setTarget(4500);
+        liftRotation.setTarget(1390);
+    }
+
     public void preSpecimenScoringPos(){
         liftRotation.setTarget(3000);
         liftExtension.setTarget(150);
         wrist.setPosition(0.4);
+        clawServo.setPosition(0.95);
+        clawOpen = false;
     }
+
     public void sampleColloectionPos() {
         liftRotation.setTarget(750);
         liftExtension.setTarget(300);
@@ -265,9 +302,9 @@ public class MecanumTeleOp extends OpMode {
     }
     public void postSpecimenScoringPos() {
         if(liftNotAtPosition){
-        liftRotation.setTarget(2400);
+        liftRotation.setTarget(2250);
         }
-        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2500)
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2300)
         {
             clawServo.setPosition(0.3);
             liftNotAtPosition = false;

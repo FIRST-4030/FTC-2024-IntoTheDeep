@@ -290,7 +290,7 @@ public class NewMecanumDrive {
         //y values are inverted
         joystickY = -1 * Math.pow(control.y, 3);
         joystickX = Math.pow(control.x, 3);
-        joystickR = control.z;
+        joystickR = control.z * 0.3;
         //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];

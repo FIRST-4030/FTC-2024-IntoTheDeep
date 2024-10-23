@@ -51,6 +51,10 @@ public class LinearMotorController {
             liftMotor.setTargetPosition(targetPos);
             target = targetPos;
     }
+
+    public void setTickLimit(int newLimit){
+        tickLimit = newLimit;
+    }
     public DcMotor getLiftMotor(){
         return liftMotor;
     }
