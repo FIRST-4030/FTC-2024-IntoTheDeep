@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
 
-// aza test line to check commit
+//TODO: Make the controller more sensitive
 @TeleOp
 public class MecanumTeleOp extends OpMode {
 
@@ -32,7 +32,8 @@ public class MecanumTeleOp extends OpMode {
     Servo clawServo, wrist;
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  0.8;     // Maximum rotational position
-    static final double MIN_POS     =  0.3;     // Minimum rotational position
+    static final double MIN_POS     =  0.3; // Minimum rotational position
+    boolean slowMode = false;
 
     // Define class members
     double  position = ((MAX_POS - MIN_POS) / 2)+0.01; // Start at halfway position
@@ -81,7 +82,7 @@ public class MecanumTeleOp extends OpMode {
         //init dpad hashmap with each dpad value as unpressed
         imu = hardwareMap.get(IMU.class, "imu");
         clawServo = hardwareMap.get(Servo.class, "claw");
-        clawServo.setPosition(0.3);
+        clawServo.setPosition(0.95);
         wrist = hardwareMap.get(Servo.class, "wrist");
         wrist.setPosition(1);
 
@@ -121,8 +122,8 @@ public class MecanumTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        if(liftExtension.getLiftMotor().getCurrentPosition() > 200){
-            driveCoefficient = 0.5;
+        if(slowMode) {
+            driveCoefficient = 0.65;
         } else {
             driveCoefficient = 1;
         }
@@ -194,6 +195,10 @@ public class MecanumTeleOp extends OpMode {
             resetIMU = true;
         }
 
+        if(inputHandler.up("D1:A")){
+            slowMode = !slowMode;
+        }
+
         if(gamepad1.left_stick_x != 0){
             resetHeading = true;
             headingTimer.reset();
@@ -205,7 +210,7 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D2:LT")){
-            sampleColloectionPos();
+            sampleCollectionPos();
         }
 
         if(scoreSpecimen){
@@ -236,11 +241,11 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D1:RB")){
-            globalIMUHeading = or.thirdAngle + Math.PI/2;
+            globalIMUHeading = or.thirdAngle - Math.PI/2;
         }
 
         if(inputHandler.up("D1:LB")){
-            globalIMUHeading = or.thirdAngle - Math.PI/2;
+            globalIMUHeading = or.thirdAngle + Math.PI/2;
         }
 
         if(inputHandler.up("D2:LB")){
@@ -284,7 +289,7 @@ public class MecanumTeleOp extends OpMode {
         clawServo.setPosition(0.95);
         clawOpen = false;
         liftRotation.setTarget(4500);
-        liftRotation.setTarget(1390);
+        liftExtension.setTarget(1390);
     }
 
     public void preSpecimenScoringPos(){
@@ -295,16 +300,16 @@ public class MecanumTeleOp extends OpMode {
         clawOpen = false;
     }
 
-    public void sampleColloectionPos() {
-        liftRotation.setTarget(750);
-        liftExtension.setTarget(300);
-        wrist.setPosition(0.3);
+    public void sampleCollectionPos() {
+        liftRotation.setTarget(1000);
+        liftExtension.setTarget(5);
+        wrist.setPosition(0.15);
     }
     public void postSpecimenScoringPos() {
         if(liftNotAtPosition){
-        liftRotation.setTarget(2250);
+        liftRotation.setTarget(2000);
         }
-        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2300)
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 2050)
         {
             clawServo.setPosition(0.3);
             liftNotAtPosition = false;
