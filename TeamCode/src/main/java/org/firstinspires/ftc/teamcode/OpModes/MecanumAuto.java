@@ -43,15 +43,15 @@ public class MecanumAuto extends LinearOpMode {
     int i = 1; //used as an iterator for outputLog()
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15.8, -55.75, 1.5708);
-    public Pose2dWrapper depositPose = new Pose2dWrapper(15.8, -32.75, 1.5708);
-    public Pose2dWrapper pushPrep1 = new Pose2dWrapper(39.8, -32.75, 1.5708);
+    public Pose2dWrapper depositPose = new Pose2dWrapper(15.8, -30.75, 1.5708);
+    public Pose2dWrapper pushPrep1 = new Pose2dWrapper(39.8, -30.75, 1.5708);
     public Pose2dWrapper pushPrep2 = new Pose2dWrapper(39.8, -8.75, 1.5708);
     public Pose2dWrapper pushPrep3 = new Pose2dWrapper(51.8, -8.75, 1.5708);
     public Pose2dWrapper brickPush1 = new Pose2dWrapper(51.8, -51.75, 1.5708);
-    public Pose2dWrapper pushPrep4 = new Pose2dWrapper(56.8, -8.75, 1.5708);
-    public Pose2dWrapper brickPush2 = new Pose2dWrapper(56.8, -51.75, 1.5708);
-    public Pose2dWrapper pushPrep5 = new Pose2dWrapper(61.8, -8.75, 1.5708);
-    public Pose2dWrapper brickPush3 = new Pose2dWrapper(61.8, -51.75, 1.5708);
+    public Pose2dWrapper pushPrep4 = new Pose2dWrapper(59.8, -8.75, 1.5708);
+    public Pose2dWrapper brickPush2 = new Pose2dWrapper(59.8, -51.75, 1.5708);
+    public Pose2dWrapper pushPrep5 = new Pose2dWrapper(66.8, -8.75, 1.5708);
+    public Pose2dWrapper brickPush3 = new Pose2dWrapper(66.8, -51.75, 1.5708);
 
 
     @Override
@@ -60,7 +60,7 @@ public class MecanumAuto extends LinearOpMode {
         liftExtension = new LinearMotorController(hardwareMap, "slide",
                 1390, false);
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                4500, false);
+                3000, false);
         wrist = hardwareMap.get(Servo.class, "wrist");
         clawServo = hardwareMap.get(Servo.class, "claw");
         inputHandler = InputAutoMapper.normal.autoMap(this);
@@ -90,24 +90,33 @@ public class MecanumAuto extends LinearOpMode {
 
         waitForStart();
 
+
+
+
+
+
+
+
+
+        if (isStopRequested()) return;
+        telemetry.addData("Started Running", " ");
+        telemetry.update();
+        sleep(startDelay);
+        outputLog(drive); //1
         Actions.runBlocking(
                 preScore()
         );
-
         Actions.runBlocking(
                 drive.actionBuilder(startPose.toPose2d())
                         .strafeTo(depositPose.toPose2d().position)
                         .build()
         );
-
         Actions.runBlocking(
                 armDown()
         );
-
         Actions.runBlocking(
                 openClaw()
         );
-
         Actions.runBlocking(
                 drive.actionBuilder(depositPose.toPose2d())
                         .strafeTo(pushPrep1.toPose2d().position)
@@ -155,16 +164,7 @@ public class MecanumAuto extends LinearOpMode {
                         .strafeTo(brickPush3.toPose2d().position)
                         .build()
         );
-
-
-
-
-
-        if (isStopRequested()) return;
-        telemetry.addData("Started Running", " ");
-        telemetry.update();
-        sleep(startDelay);
-        outputLog(drive); //1
+        sleep(1000);
 
     }
 
@@ -174,11 +174,11 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
 
-                liftRotation.setTarget(3000);
+                liftRotation.setTarget(2000);
                 liftExtension.setTarget(150);
                 wrist.setPosition(0.4);
                 clawServo.setPosition(0.95);
-                return liftRotation.getLiftMotor().getCurrentPosition() > 2950;
+                return liftRotation.getLiftMotor().getCurrentPosition() > 1960;
             }
         };
     }
@@ -188,8 +188,8 @@ public class MecanumAuto extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                    liftRotation.setTarget(2000);
-                    return liftRotation.getLiftMotor().getCurrentPosition() <= 2050;
+                    liftRotation.setTarget(1332);
+                    return liftRotation.getLiftMotor().getCurrentPosition() <= 1350;
             }
         };
     }
@@ -201,7 +201,7 @@ public class MecanumAuto extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
                     ElapsedTime timer = new ElapsedTime();
                     clawServo.setPosition(0.3);
-                    return timer.milliseconds() < 75;
+                    return timer.milliseconds() > 100;
             }
         };
     }
