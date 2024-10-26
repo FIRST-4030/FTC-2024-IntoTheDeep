@@ -34,10 +34,7 @@ public class MecanumTeleOp extends OpMode {
     static final double MAX_POS     =  0.8;     // Maximum rotational position
     static final double MIN_POS     =  0.3; // Minimum rotational position
     boolean slowMode = false;
-
-    // Define class members
-    double  position = ((MAX_POS - MIN_POS) / 2)+0.01; // Start at halfway position
-    boolean rampUp = true;
+    boolean trig = false;
 
     double driveCoefficient = 1;
     IMU imu;
@@ -55,6 +52,12 @@ public class MecanumTeleOp extends OpMode {
     double headingError = 0;
     boolean resetIMU = false;
     boolean hanging = false;
+
+    //TRIG BELOW:
+
+    double theta;
+    static final double TARGET = 6;
+    double extensionInches = 0;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -122,7 +125,7 @@ public class MecanumTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        if(slowMode) {
+        if(slowMode || liftExtension.getLiftMotor().getCurrentPosition() > 750) {
             driveCoefficient = 0.65;
         } else {
             driveCoefficient = 1;
@@ -132,23 +135,8 @@ public class MecanumTeleOp extends OpMode {
         deltaTime = timer.milliseconds() - previousTime;
         previousTime += deltaTime;
 
-        if (gamepad2.a && clawTimer.seconds() > 0.5) {
-            clawTimer.reset();
-            if (rampUp) {
-                position = MAX_POS;
-                rampUp = !rampUp;   // Switch ramp direction
-            }
-            else {
-                position = MIN_POS;
-                rampUp = !rampUp;  // Switch ramp direction
-            }
-        }
 
         // Display the current value
-        telemetry.addData("Servo Position", "%5.2f", position);
-        telemetry.addData("time", clawTimer.seconds());
-        telemetry.addData(">", "Press Stop to end test." );
-        telemetry.update();
 
         telemetry.addData("deltatime: ", deltaTime);
         telemetry.addData("Joystick X ", gamepad1.right_stick_x);
@@ -172,8 +160,13 @@ public class MecanumTeleOp extends OpMode {
 
         //Main Drive Update Code: :)
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
-        liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
-        liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
+        if(trig) {
+            liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
+        } else {
+            liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
+            liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
+        }
+
         telemetry.addData("Rot: ", liftRotation.target);
         telemetry.addData("Ext: ", liftExtension.target);
 
@@ -262,6 +255,7 @@ public class MecanumTeleOp extends OpMode {
     }
 
     public void beginHang(){
+        trig = false;
         if(hanging){
             hanging = false;
             liftRotation.setTickLimit(4500);
@@ -277,6 +271,7 @@ public class MecanumTeleOp extends OpMode {
     }
 
     public void specimenCollectionPos(){
+        trig = false;
         liftRotation.setTarget(1330);
         liftExtension.setTarget(500);
         clawServo.setPosition(0.95);
@@ -285,6 +280,7 @@ public class MecanumTeleOp extends OpMode {
     }
 
     public void highBasket() {
+        trig = false;
         wrist.setPosition(0.775);
         clawServo.setPosition(0.95);
         clawOpen = false;
@@ -293,6 +289,7 @@ public class MecanumTeleOp extends OpMode {
     }
 
     public void preSpecimenScoringPos(){
+        trig = false;
         liftRotation.setTarget(3000);
         liftExtension.setTarget(150);
         wrist.setPosition(0.4);
@@ -301,11 +298,13 @@ public class MecanumTeleOp extends OpMode {
     }
 
     public void sampleCollectionPos() {
+        trig = true;
         liftRotation.setTarget(1000);
         liftExtension.setTarget(5);
         wrist.setPosition(0.15);
     }
     public void postSpecimenScoringPos() {
+        trig = false;
         if(liftNotAtPosition){
         liftRotation.setTarget(2000);
         }
