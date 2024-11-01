@@ -108,12 +108,12 @@ public class MecanumAuto extends LinearOpMode {
             depositPose4 = new Pose2dWrapper(0, -27, 1.5708);
         } else {
             ///Positions for when scoring on Sample Side
-            startPose = new Pose2dWrapper(0, 0, 1.5708);
-            depositPose = new Pose2dWrapper(0, 0, 1.5708);
-            collectionPose = new Pose2dWrapper(0, 0, 1.5708);
-            collectionPose2 = new Pose2dWrapper(0, 0, 1.5708);
-            collectionPose3 = new Pose2dWrapper(0, 0, 1.5708);
-            parkPose = new Pose2dWrapper(0, 0, 3.1415);
+            startPose = new Pose2dWrapper(-32, -56, 1.5708);
+            depositPose = new Pose2dWrapper(-55, -50, 1.5708);
+            collectionPose = new Pose2dWrapper(20, -36, 1.5708);
+            collectionPose2 = new Pose2dWrapper(12, -36, 1.5708);
+            collectionPose3 = new Pose2dWrapper(10, -36, 0.785);
+            parkPose = new Pose2dWrapper(-22, -7, 3.1415);
         }
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d());
 
