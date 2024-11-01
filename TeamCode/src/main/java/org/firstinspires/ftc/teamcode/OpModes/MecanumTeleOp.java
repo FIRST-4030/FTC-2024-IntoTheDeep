@@ -59,8 +59,8 @@ public class MecanumTeleOp extends OpMode {
     //TRIG BELOW:
 
     double theta;
-    static final double HIGH_TARGET = 4.5;
-    static final double LOW_TARGET = 6.5;
+    static final double HIGH_TARGET = 2.5;
+    static final double LOW_TARGET = 5.5;
     double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
     double rotationTicksPerDegree = 25;
@@ -234,6 +234,10 @@ public class MecanumTeleOp extends OpMode {
 
         if(inputHandler.up("D2:LT")){
             sampleCollectionPos();
+        }
+
+        if(inputHandler.up("D2:LB")){
+            highTarget = !highTarget;
         }
 
         if(scoreSpecimen){
