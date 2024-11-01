@@ -25,6 +25,8 @@ public class MecanumTeleOp extends OpMode {
 
     final int LIFT_ROT_COEFFICIENT = 39;
     final int LIFT_EXT_COEFFICIENT = 30;
+    final double STARTING_LENGTH = 14.5;
+    final int MINIMUM_DEGREES = 55;
     NewMecanumDrive drive;
     InputHandler inputHandler;
     Vector3d mecanumController;
@@ -52,13 +54,14 @@ public class MecanumTeleOp extends OpMode {
     double headingError = 0;
     boolean resetIMU = false;
     boolean hanging = false;
+    boolean basket = false;
 
     //TRIG BELOW:
 
     double theta;
-    static final double HIGH_TARGET = 6;
-    static final double LOW_TARGET = 6;
-    double extensionInches = 0;
+    static final double HIGH_TARGET = 4.5;
+    static final double LOW_TARGET = 6.5;
+    double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
     double rotationTicksPerDegree = 25;
     boolean highTarget = true;
@@ -166,21 +169,38 @@ public class MecanumTeleOp extends OpMode {
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
         if(trig) {
             liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
-            extensionInches = liftExtension.getLiftMotor().getCurrentPosition() / extensionTicksPerIn;
+            extensionInches = (liftExtension.getLiftMotor().getCurrentPosition() / extensionTicksPerIn)
+                    + STARTING_LENGTH;
             if(highTarget) {
-                theta = Math.acos(HIGH_TARGET / extensionInches);
+                theta = 180/Math.PI * (Math.acos(HIGH_TARGET / extensionInches));
             } else {
-                theta = Math.acos(LOW_TARGET / extensionInches);
+                theta = 180/Math.PI * (Math.acos(LOW_TARGET / extensionInches));
             }
-            liftRotation.setTarget( (int) (theta * rotationTicksPerDegree) );
+            telemetry.addData("Trig Theta Angle: ", theta);
+            liftRotation.setTarget((int) (((theta * rotationTicksPerDegree) - (MINIMUM_DEGREES * rotationTicksPerDegree))));
+
+            //liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
+            //liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
 
         } else {
             liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
             liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
         }
 
+        if(basket) {
+            liftExtension.setTickLimit(1390);
+        } else {
+            liftExtension.setTickLimit(1310);
+        }
+
         telemetry.addData("Rot: ", liftRotation.target);
         telemetry.addData("Ext: ", liftExtension.target);
+
+        if(liftExtension.getLiftMotor().getCurrentPosition() > 925
+                && wrist.getPosition() < 0.6
+                && wrist.getPosition() > 0.4) {
+            wrist.setPosition(0.05);
+        }
 
         telemetry.update();
         outputLog();
@@ -200,7 +220,7 @@ public class MecanumTeleOp extends OpMode {
             resetIMU = true;
         }
 
-        slowMode = inputHandler.held("D1:R2");
+        slowMode = inputHandler.active("D1:RT");
 
         if(gamepad1.left_stick_x != 0){
             resetHeading = true;
@@ -251,7 +271,7 @@ public class MecanumTeleOp extends OpMode {
             globalIMUHeading = or.thirdAngle + Math.PI/2;
         }
 
-        if(inputHandler.up("D2:LB")){
+        if(inputHandler.up("D2:RB")){
             highBasket();
         }
         if(inputHandler.up("D1:LT")){
@@ -266,22 +286,25 @@ public class MecanumTeleOp extends OpMode {
 
     public void beginHang(){
         trig = false;
+        basket = false;
         if(hanging){
             hanging = false;
             liftRotation.setTickLimit(3000);
             liftRotation.setTarget(3000);
         } else {
             hanging = true;
-            liftRotation.setTickLimit(3500);
+            liftRotation.setTickLimit(3333);
             liftRotation.setTarget(3333);
             liftExtension.setTarget(5);
             clawServo.setPosition(0.1);
+            wrist.setPosition(0.01);
 
         }
     }
 
     public void specimenCollectionPos(){
         trig = false;
+        basket = false;
         liftRotation.setTarget(886);
         liftExtension.setTarget(500);
         clawServo.setPosition(0.95);
@@ -291,15 +314,18 @@ public class MecanumTeleOp extends OpMode {
 
     public void highBasket() {
         trig = false;
+        basket = true;
         wrist.setPosition(0.775);
         clawServo.setPosition(0.95);
         clawOpen = false;
+
         liftRotation.setTarget(3000);
         liftExtension.setTarget(1390);
     }
 
     public void preSpecimenScoringPos(){
         trig = false;
+        basket = false;
         liftRotation.setTarget(2000);
         liftExtension.setTarget(150);
         wrist.setPosition(0.4);
@@ -309,16 +335,18 @@ public class MecanumTeleOp extends OpMode {
 
     public void sampleCollectionPos() {
         trig = true;
+        basket = false;
         liftRotation.setTarget(667);
         liftExtension.setTarget(5);
         wrist.setPosition(0.15);
     }
     public void postSpecimenScoringPos() {
         trig = false;
+        basket = false;
         if(liftNotAtPosition){
         liftRotation.setTarget(1332);
         }
-        if(liftRotation.getLiftMotor().getCurrentPosition() <= 1300)
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 1350)
         {
             clawServo.setPosition(0.3);
             liftNotAtPosition = false;

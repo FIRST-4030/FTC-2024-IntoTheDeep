@@ -74,7 +74,7 @@ public class NewMecanumDrive {
 
         // drive model parameters
         public double inPerTick = 0.00057336671;
-        public double lateralInPerTick = 0.0004852192942301951; //Not used Roadrunner lateral tuning, potentially bad
+        public double lateralInPerTick = 0.0005854192942301951;
         public double trackWidthTicks = 28132;
 
         // feedforward parameters (in tick units)

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import android.text.ParcelableSpan;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -35,23 +37,30 @@ public class MecanumAuto extends LinearOpMode {
     boolean liftNotAtPosition = true;
 
     boolean inputComplete = false;
+    boolean side = true;
     Pose2d robotPose;
 
     ElapsedTime runtime = new ElapsedTime();
-    ElapsedTime inputTimer = new ElapsedTime();
     int startDelay = 0;
     int i = 1; //used as an iterator for outputLog()
 
-    public Pose2dWrapper startPose = new Pose2dWrapper(15.8, -55.75, 1.5708);
-    public Pose2dWrapper depositPose = new Pose2dWrapper(15.8, -30.75, 1.5708);
-    public Pose2dWrapper pushPrep1 = new Pose2dWrapper(39.8, -30.75, 1.5708);
-    public Pose2dWrapper pushPrep2 = new Pose2dWrapper(39.8, -8.75, 1.5708);
-    public Pose2dWrapper pushPrep3 = new Pose2dWrapper(51.8, -8.75, 1.5708);
-    public Pose2dWrapper brickPush1 = new Pose2dWrapper(51.8, -51.75, 1.5708);
-    public Pose2dWrapper pushPrep4 = new Pose2dWrapper(59.8, -8.75, 1.5708);
-    public Pose2dWrapper brickPush2 = new Pose2dWrapper(59.8, -51.75, 1.5708);
-    public Pose2dWrapper pushPrep5 = new Pose2dWrapper(66.8, -8.75, 1.5708);
-    public Pose2dWrapper brickPush3 = new Pose2dWrapper(66.8, -51.75, 1.5708);
+    public Pose2dWrapper startPose;
+    public Pose2dWrapper depositPose;
+    public Pose2dWrapper pushPrep1;
+    public Pose2dWrapper pushPrep2;
+    public Pose2dWrapper pushPrep3;
+    public Pose2dWrapper brickPush1;
+    public Pose2dWrapper collectionPose;
+    public Pose2dWrapper intermediaryPose;
+    public Pose2dWrapper depositPose2;
+    public Pose2dWrapper parkPose;
+    public Pose2dWrapper depositPose3;
+    public Pose2dWrapper depositPose4;
+
+    public Pose2dWrapper collectionPose2;
+    public Pose2dWrapper collectionPose3;
+
+
 
 
     @Override
@@ -65,106 +74,352 @@ public class MecanumAuto extends LinearOpMode {
         clawServo = hardwareMap.get(Servo.class, "claw");
         inputHandler = InputAutoMapper.normal.autoMap(this);
         clawServo.setPosition(0.95);
-        /*while (inputComplete == false) {
+        while (inputComplete == false) {
 
 
             if (inputHandler.up("D1:X")) {
                 inputComplete = true;
-                inputTimer.reset();
+            }
+            if(inputHandler.up("D1:RT")){
+                side = !side;
             }
             telemetry.addData("-----Initialization-----", "");
             telemetry.addLine();
-            telemetry.addData("-----Modifications-----", "");
-            telemetry.addLine();
+            telemetry.addData("Auto Mode: ", side ? "Sample Scoring" : "Specimen Scoring");
+            //telemetry.addData("-----Modifications-----", "");
+            //telemetry.addLine();
             telemetry.addData("Press X to finalize values", inputComplete);
             telemetry.update();
 
         }
-
-
-        vision = new ComputerVision(hardwareMap);
-        while (vision.visionPortal.getCameraState() == OPENING_CAMERA_DEVICE) {}
-
-        vision.setActiveCameraOne();*/
+        if(side) {
+            ///Positions for when scoring on Specimen Side
+            startPose = new Pose2dWrapper(15.8, -55.75, 1.5708);
+            depositPose = new Pose2dWrapper(15.8, -27, 1.5708);
+            pushPrep1 = new Pose2dWrapper(40.8, -30.75, 1.5708);
+            pushPrep2 = new Pose2dWrapper(39.8, -7.75, 1.5708);
+            pushPrep3 = new Pose2dWrapper(51.8, -7.75, 1.5708);
+            brickPush1 = new Pose2dWrapper(51.8, -51.75, 1.5708);
+            collectionPose = new Pose2dWrapper(46.5, -66.5, 0);
+            intermediaryPose = new Pose2dWrapper(43, -63.5, 1.5708);
+            depositPose2 = new Pose2dWrapper(9.8, -27, 1.5708);
+            parkPose = new Pose2dWrapper(51.8, -51.75, 1.5708);
+            depositPose3 = new Pose2dWrapper(4.8, -27, 1.5708);
+            depositPose4 = new Pose2dWrapper(0, -27, 1.5708);
+        } else {
+            ///Positions for when scoring on Sample Side
+            startPose = new Pose2dWrapper(0, 0, 1.5708);
+            depositPose = new Pose2dWrapper(0, 0, 1.5708);
+            collectionPose = new Pose2dWrapper(0, 0, 1.5708);
+            collectionPose2 = new Pose2dWrapper(0, 0, 1.5708);
+            collectionPose3 = new Pose2dWrapper(0, 0, 1.5708);
+            parkPose = new Pose2dWrapper(0, 0, 3.1415);
+        }
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d());
 
+
+        ///START AUTO:
         waitForStart();
-
-
-
-
-
-
-
-
-
         if (isStopRequested()) return;
         telemetry.addData("Started Running", " ");
         telemetry.update();
-        sleep(startDelay);
-        outputLog(drive); //1
-        Actions.runBlocking(
-                preScore()
-        );
-        Actions.runBlocking(
-                drive.actionBuilder(startPose.toPose2d())
-                        .strafeTo(depositPose.toPose2d().position)
-                        .build()
-        );
-        Actions.runBlocking(
-                armDown()
-        );
-        Actions.runBlocking(
-                openClaw()
-        );
-        Actions.runBlocking(
-                drive.actionBuilder(depositPose.toPose2d())
-                        .strafeTo(pushPrep1.toPose2d().position)
-                        .build()
-        );
+        outputLog(drive);
 
-        Actions.runBlocking(
-                drive.actionBuilder(pushPrep1.toPose2d())
-                        .strafeTo(pushPrep2.toPose2d().position)
-                        .build()
-        );
+        /// Auto code for when scoring Samples
+        if(side) {
+            Actions.runBlocking(
+                    preScore()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(startPose.toPose2d())
+                            .strafeTo(depositPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    armDown()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    openClaw()
+            );
+            Actions.runBlocking(
+                    stow()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .strafeTo(pushPrep1.toPose2d().position)
+                            .build()
+            );
 
-        Actions.runBlocking(
-                drive.actionBuilder(pushPrep2.toPose2d())
-                        .strafeTo(pushPrep3.toPose2d().position)
-                        .build()
-        );
+            Actions.runBlocking(
+                    drive.actionBuilder(pushPrep1.toPose2d())
+                            .strafeTo(pushPrep2.toPose2d().position)
+                            .build()
+            );
 
-        Actions.runBlocking(
-                drive.actionBuilder(pushPrep3.toPose2d())
-                        .strafeTo(brickPush1.toPose2d().position)
-                        .build()
-        );
+            Actions.runBlocking(
+                    drive.actionBuilder(pushPrep2.toPose2d())
+                            .strafeTo(pushPrep3.toPose2d().position)
+                            .build()
+            );
 
-        Actions.runBlocking(
-                drive.actionBuilder(brickPush1.toPose2d())
-                        .strafeTo(pushPrep4.toPose2d().position)
-                        .build()
-        );
+            Actions.runBlocking(
+                    drive.actionBuilder(pushPrep3.toPose2d())
+                            .strafeTo(brickPush1.toPose2d().position)
+                            .build()
+            );
 
-        Actions.runBlocking(
-                drive.actionBuilder(pushPrep4.toPose2d())
-                        .strafeTo(brickPush2.toPose2d().position)
-                        .build()
-        );
+            Actions.runBlocking(
+                    drive.actionBuilder(brickPush1.toPose2d())
+                            .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                            .build()
+            );
 
-        Actions.runBlocking(
-                drive.actionBuilder(brickPush2.toPose2d())
-                        .strafeTo(pushPrep5.toPose2d().position)
-                        .build()
-        );
+            sleep(400);
 
-        Actions.runBlocking(
-                drive.actionBuilder(pushPrep5.toPose2d())
-                        .strafeTo(brickPush3.toPose2d().position)
-                        .build()
-        );
-        sleep(1000);
+            Actions.runBlocking(
+                    collectionPrep2()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    collect()
+            );
+
+
+            sleep(500);
+            Actions.runBlocking(
+                    preScore()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose.toPose2d())
+                            .strafeToLinearHeading(intermediaryPose.toPose2d().position, intermediaryPose.heading)
+                            .build()
+            );
+
+
+            Actions.runBlocking(
+                    drive.actionBuilder(intermediaryPose.toPose2d())
+                            .strafeTo(depositPose2.toPose2d().position)
+                            .build()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    armDown()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    openClaw()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    resetArm()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose2.toPose2d())
+                            .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                            .build()
+            );
+
+            sleep(750);
+
+            Actions.runBlocking(
+                    collectionPrep()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    collect()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    preScore()
+            );
+
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose.toPose2d())
+                            .strafeToLinearHeading(intermediaryPose.toPose2d().position, intermediaryPose.heading)
+                            .build()
+            );
+
+            Actions.runBlocking(
+                    drive.actionBuilder(intermediaryPose.toPose2d())
+                            .strafeTo(depositPose3.toPose2d().position)
+                            .build()
+            );
+
+            sleep(500);
+            Actions.runBlocking(
+                    armDown()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    openClaw()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    resetArm()
+            );
+
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose3.toPose2d())
+                            .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                            .build()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    collectionPrep()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    collect()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    preScore()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose.toPose2d())
+                            .strafeToLinearHeading(intermediaryPose.toPose2d().position, intermediaryPose.heading)
+                            .build()
+            );
+            sleep(500);
+            Actions.runBlocking(
+                    drive.actionBuilder(intermediaryPose.toPose2d())
+                            .strafeTo(depositPose4.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    armDown()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    openClaw()
+            );
+            sleep(500);
+
+            Actions.runBlocking(
+                    resetArm()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose4.toPose2d())
+                            .strafeTo(parkPose.toPose2d().position)
+                            .build()
+            );
+
+
+        } else {
+            /// Auto code for when scoring Samples
+            Actions.runBlocking(
+                    drive.actionBuilder(startPose.toPose2d())
+                            .strafeTo(depositPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    highBucketPrep()
+            );
+            Actions.runBlocking(
+                    openClaw()
+            );
+            Actions.runBlocking(
+                    floorPickUpPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .strafeTo(collectionPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    pickUp()
+            );
+            Actions.runBlocking(
+                    highBucketPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose.toPose2d())
+                            .strafeTo(depositPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    openClaw()
+            );
+            Actions.runBlocking(
+                    floorPickUpPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .strafeTo(collectionPose2.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    pickUp()
+            );
+            Actions.runBlocking(
+                    highBucketPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose2.toPose2d())
+                            .strafeTo(depositPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    openClaw()
+            );
+            Actions.runBlocking(
+                    floorPickUpPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .strafeTo(collectionPose3.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    pickUp()
+            );
+            Actions.runBlocking(
+                    highBucketPrep()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(collectionPose.toPose2d())
+                            .strafeTo(depositPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    openClaw()
+            );
+            Actions.runBlocking(
+                    stow()
+            );
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .strafeTo(parkPose.toPose2d().position)
+                            .build()
+            );
+            Actions.runBlocking(
+                    armParkPose()
+            );
+
+
+            }
 
     }
 
@@ -205,6 +460,133 @@ public class MecanumAuto extends LinearOpMode {
             }
         };
     }
+
+    public Action pickUp() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                clawServo.setPosition(0.95);
+                liftRotation.setTarget(500);
+                return liftRotation.getLiftMotor().getCurrentPosition() < 510;
+            }
+        };
+    }
+
+    public Action stow() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                liftExtension.setTarget(0);
+                liftRotation.setTarget(10);
+                wrist.setPosition(1);
+                return liftRotation.getLiftMotor().getCurrentPosition() <= 250;
+            }
+        };
+    }
+
+    public Action collectionPrep() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftRotation.setTarget(850);
+                liftExtension.setTarget(275);
+                clawServo.setPosition(0.05);
+                wrist.setPosition(0.5);
+                return timer.milliseconds() > 1200;
+            }
+        };
+    }
+
+    public Action collectionPrep2() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftRotation.setTarget(850);
+                liftExtension.setTarget(250);
+                clawServo.setPosition(0.05);
+                wrist.setPosition(0.5);
+                return timer.milliseconds() > 1200;
+            }
+        };
+    }
+
+
+    public Action collect() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                clawServo.setPosition(0.95);
+                return timer.milliseconds() > 300;
+            }
+        };
+    }
+
+    public Action resetArm() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftExtension.setTarget(0);
+                liftRotation.setTarget(0);
+                clawServo.setPosition(0.95);
+                wrist.setPosition(1);
+                return timer.milliseconds() > 500;
+            }
+        };
+    }
+
+    public Action highBucketPrep() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                wrist.setPosition(0.775);
+                clawServo.setPosition(0.95);
+                liftRotation.setTarget(3000);
+                liftExtension.setTarget(1390);
+                return liftRotation.getLiftMotor().getCurrentPosition() >= 2945;
+            }
+        };
+    }
+
+    public Action floorPickUpPrep() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                liftRotation.setTarget(550);
+                liftExtension.setTarget(75);
+                wrist.setPosition(0.15);
+                return liftRotation.getLiftMotor().getCurrentPosition() <= 560;
+            }
+
+        };
+    }
+
+    public Action armParkPose() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                liftRotation.setTarget(1500);
+                liftExtension.setTarget(300);
+                wrist.setPosition(0.90);
+                return liftRotation.getLiftMotor().getCurrentPosition() >= 1540;
+            }
+        };
+    }
+
+
 
     public void outputLog (NewMecanumDrive drive){
         RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f Heading: %.03f ms: %.03f iteration: %d",
