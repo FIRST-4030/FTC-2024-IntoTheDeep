@@ -145,7 +145,14 @@ public class MecanumAuto extends LinearOpMode {
             Actions.runBlocking(
                     stow()
             );
-            sleep(500);
+            Actions.runBlocking(
+                    drive.actionBuilder(depositPose.toPose2d())
+                            .splineToConstantHeading(pushPrep1.toPose2d().position, pushPrep1.heading)
+                            .splineToConstantHeading(pushPrep2.toPose2d().position, pushPrep2.heading)
+                            .splineToConstantHeading(pushPrep3.toPose2d().position, pushPrep2.heading)
+                            .build()
+            );
+            /*
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(pushPrep1.toPose2d().position)
@@ -163,7 +170,7 @@ public class MecanumAuto extends LinearOpMode {
                             .strafeTo(pushPrep3.toPose2d().position)
                             .build()
             );
-
+            */
             Actions.runBlocking(
                     drive.actionBuilder(pushPrep3.toPose2d())
                             .strafeTo(brickPush1.toPose2d().position)

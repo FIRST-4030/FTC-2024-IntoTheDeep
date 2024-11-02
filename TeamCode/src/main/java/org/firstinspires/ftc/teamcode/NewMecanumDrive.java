@@ -308,7 +308,7 @@ public class NewMecanumDrive {
 
 
         //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
-        convertToFieldCentric();
+        //convertToFieldCentric();
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
         leftFront.setPower((joystickY + joystickX + joystickR)/normalization);
         leftBack.setPower((joystickY - joystickX + joystickR)/normalization);
