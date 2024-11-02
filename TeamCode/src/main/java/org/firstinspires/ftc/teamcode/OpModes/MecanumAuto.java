@@ -334,7 +334,7 @@ public class MecanumAuto extends LinearOpMode {
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
-            Actions.runBlocking(
+            /*Actions.runBlocking(
                     highBucketPrep()
             );
             Actions.runBlocking(
@@ -342,81 +342,98 @@ public class MecanumAuto extends LinearOpMode {
             );
             Actions.runBlocking(
                     floorPickUpPrep()
-            );
+            );*/
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(collectionPose.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     pickUp()
             );
             Actions.runBlocking(
                     highBucketPrep()
             );
+
+             */
             Actions.runBlocking(
                     drive.actionBuilder(collectionPose.toPose2d())
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     openClaw()
             );
             Actions.runBlocking(
                     floorPickUpPrep()
             );
+            */
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(collectionPose2.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     pickUp()
             );
             Actions.runBlocking(
                     highBucketPrep()
             );
+            */
             Actions.runBlocking(
                     drive.actionBuilder(collectionPose2.toPose2d())
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     openClaw()
             );
             Actions.runBlocking(
                     floorPickUpPrep()
             );
+            */
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(collectionPose3.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     pickUp()
             );
             Actions.runBlocking(
                     highBucketPrep()
             );
+            */
             Actions.runBlocking(
                     drive.actionBuilder(collectionPose.toPose2d())
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     openClaw()
             );
             Actions.runBlocking(
                     stow()
             );
+
+             */
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(parkPose.toPose2d().position)
                             .build()
             );
+            /*
             Actions.runBlocking(
                     armParkPose()
             );
+            
+             */
 
 
             }
