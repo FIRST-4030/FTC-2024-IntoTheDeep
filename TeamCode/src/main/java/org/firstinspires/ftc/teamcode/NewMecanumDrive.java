@@ -124,7 +124,7 @@ public class NewMecanumDrive {
     public final VoltageSensor voltageSensor;
 
     public final LazyImu lazyImu;
-    public final IMU teleOpImu;
+    public final LazyImu teleOpImu;
 
     public final Localizer localizer;
     public Pose2d pose;
@@ -263,10 +263,8 @@ public class NewMecanumDrive {
         lazyImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
                 PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
 
-        teleOpImu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+        teleOpImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
                 PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
-        teleOpImu.initialize(parameters);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
@@ -283,11 +281,11 @@ public class NewMecanumDrive {
             }
         }
         if(reset){
-            teleOpImu.resetYaw();
+            teleOpImu.get().resetYaw();
             reset = false;
         }
         //get the current robot heading to use for field centric
-        robotAngle = teleOpImu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        robotAngle = teleOpImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         //y values are inverted
         joystickY = -1 * Math.pow(control.y, 3);
         joystickX = Math.pow(control.x, 3);
@@ -308,7 +306,7 @@ public class NewMecanumDrive {
             holdHeading(headingError);
         }
 
-        //convertToFieldCentric();
+
         //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
         convertToFieldCentric();
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);

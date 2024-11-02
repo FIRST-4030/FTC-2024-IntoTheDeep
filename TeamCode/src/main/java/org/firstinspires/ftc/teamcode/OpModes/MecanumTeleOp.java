@@ -64,7 +64,7 @@ public class MecanumTeleOp extends OpMode {
     double theta;
     static final double HIGH_TARGET = 2.5;
     static final double LOW_TARGET = 5.25;
-    double controlledTarget = 5.5;
+    double controlledTarget = 2.5;
     double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
     double rotationTicksPerDegree = 25;
@@ -103,11 +103,11 @@ public class MecanumTeleOp extends OpMode {
         wrist = hardwareMap.get(Servo.class, "wrist");
         wrist.setPosition(1);
 
-
+        /*
         imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT
-        )));
+        )));*/
         imu.resetYaw();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         globalIMUHeading = or.thirdAngle;
@@ -150,15 +150,9 @@ public class MecanumTeleOp extends OpMode {
 
 
         // Display the current value
-        telemetry.addData("Wrist Position: ", wrist.getPosition());
-        telemetry.addData("deltatime: ", deltaTime);
-        telemetry.addData("Joystick X ", gamepad1.right_stick_x);
-        telemetry.addData("Joystick Y ", gamepad1.right_stick_y);
-        telemetry.addData("Joystick Z ", gamepad1.left_stick_x);
-
-        telemetry.addData("par: ", drive.rightBack.getCurrentPosition());
-        telemetry.addData("perp ", drive.rightFront.getCurrentPosition());
-        telemetry.addData("motor ticks: ", liftRotation.getLiftMotor().getCurrentPosition());
+        telemetry.addData("Yaw: ", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+        telemetry.addData("Pitch: ", imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS));
+        telemetry.addData("Roll: ", imu.getRobotYawPitchRollAngles().getRoll(AngleUnit.RADIANS));
 
 
 
@@ -223,14 +217,14 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.active("D2:DPAD_UP")){
             driverControlled = true;
             if(controlledTarget > 2) {
-                controlledTarget -= 0.025;
+                controlledTarget -= 0.06;
             }
         }
 
         if(inputHandler.active("D2:DPAD_DOWN")){
             driverControlled = true;
             if(controlledTarget < 5.25) {
-                controlledTarget += 0.025;
+                controlledTarget += 0.06;
             }
 
         }
