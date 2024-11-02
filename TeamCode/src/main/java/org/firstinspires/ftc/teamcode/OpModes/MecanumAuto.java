@@ -410,7 +410,7 @@ public class MecanumAuto extends LinearOpMode {
             );
             */
             Actions.runBlocking(
-                    drive.actionBuilder(collectionPose.toPose2d())
+                    drive.actionBuilder(collectionPose3.toPose2d())
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
@@ -432,7 +432,7 @@ public class MecanumAuto extends LinearOpMode {
             Actions.runBlocking(
                     armParkPose()
             );
-            
+
              */
 
 

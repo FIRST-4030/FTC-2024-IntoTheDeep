@@ -63,11 +63,14 @@ public class MecanumTeleOp extends OpMode {
 
     double theta;
     static final double HIGH_TARGET = 2.5;
-    static final double LOW_TARGET = 5.5;
+    static final double LOW_TARGET = 5.25;
+    double controlledTarget = 5.5;
     double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
     double rotationTicksPerDegree = 25;
     boolean highTarget = true;
+    boolean lowTarget = false;
+    boolean driverControlled = false;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -174,9 +177,11 @@ public class MecanumTeleOp extends OpMode {
             liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
             extensionInches = (liftExtension.getLiftMotor().getCurrentPosition() / extensionTicksPerIn)
                     + STARTING_LENGTH;
-            if(highTarget) {
+            if(driverControlled){
+                theta = 180/Math.PI * (Math.acos(controlledTarget / extensionInches));
+            }else if(highTarget) {
                 theta = 180/Math.PI * (Math.acos(HIGH_TARGET / extensionInches));
-            } else {
+            } else if (lowTarget){
                 theta = 180/Math.PI * (Math.acos(LOW_TARGET / extensionInches));
             }
             telemetry.addData("Trig Theta Angle: ", theta);
@@ -215,11 +220,19 @@ public class MecanumTeleOp extends OpMode {
 
         liftRotControl = gamepad2.left_stick_y;
 
-        if(inputHandler.active("D1:DPAD_UP")){
-            wrist.setPosition(wrist.getPosition()+0.005);
+        if(inputHandler.active("D2:DPAD_UP")){
+            driverControlled = true;
+            if(controlledTarget > 2) {
+                controlledTarget -= 0.025;
+            }
         }
-        if(inputHandler.active("D1:DPAD_DOWN")){
-            wrist.setPosition(wrist.getPosition()-0.005);
+
+        if(inputHandler.active("D2:DPAD_DOWN")){
+            driverControlled = true;
+            if(controlledTarget < 5.25) {
+                controlledTarget += 0.025;
+            }
+
         }
 
         if(!hanging) {
@@ -248,7 +261,9 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D2:LB")){
+            driverControlled = false;
             highTarget = !highTarget;
+            lowTarget = !lowTarget;
         }
 
         if(scoreSpecimen){
@@ -351,9 +366,12 @@ public class MecanumTeleOp extends OpMode {
     public void sampleCollectionPos() {
         trig = true;
         basket = false;
+        highTarget = true;
+        lowTarget = false;
         liftRotation.setTarget(667);
         liftExtension.setTarget(5);
         wrist.setPosition(0.15);
+        clawServo.setPosition(0.3);
     }
     public void postSpecimenScoringPos() {
         trig = false;
