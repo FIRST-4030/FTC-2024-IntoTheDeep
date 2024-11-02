@@ -74,8 +74,8 @@ public class MecanumAuto extends LinearOpMode {
         clawServo = hardwareMap.get(Servo.class, "claw");
         inputHandler = InputAutoMapper.normal.autoMap(this);
         clawServo.setPosition(0.95);
-        while (inputComplete == false) {
-
+        while (!inputComplete) {
+            inputHandler.loop();
 
             if (inputHandler.up("D1:X")) {
                 inputComplete = true;
@@ -92,7 +92,7 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.update();
 
         }
-        if(side) {
+        if(!side) {
             ///Positions for when scoring on Specimen Side
             startPose = new Pose2dWrapper(15.8, -55.75, 1.5708);
             depositPose = new Pose2dWrapper(15.8, -27, 1.5708);
@@ -110,7 +110,7 @@ public class MecanumAuto extends LinearOpMode {
             ///Positions for when scoring on Sample Side
             startPose = new Pose2dWrapper(-32, -56, 1.5708);
             depositPose = new Pose2dWrapper(-55, -50, 1.5708);
-            collectionPose = new Pose2dWrapper(20, -36, 1.5708);
+            collectionPose = new Pose2dWrapper(-20, -36, 1.5708);
             collectionPose2 = new Pose2dWrapper(12, -36, 1.5708);
             collectionPose3 = new Pose2dWrapper(10, -36, 0.785);
             parkPose = new Pose2dWrapper(-22, -7, 3.1415);
@@ -125,8 +125,8 @@ public class MecanumAuto extends LinearOpMode {
         telemetry.update();
         outputLog(drive);
 
-        /// Auto code for when scoring Samples
-        if(side) {
+        /// Auto code for when scoring Specimens
+        if(!side) {
             Actions.runBlocking(
                     preScore()
             );
@@ -554,7 +554,8 @@ public class MecanumAuto extends LinearOpMode {
                 clawServo.setPosition(0.95);
                 liftRotation.setTarget(3000);
                 liftExtension.setTarget(1390);
-                return liftRotation.getLiftMotor().getCurrentPosition() >= 2945;
+                //return liftRotation.getLiftMotor().getCurrentPosition() >= 2945;
+                return liftExtension.getLiftMotor().getCurrentPosition() >= 1380;
             }
         };
     }

@@ -23,9 +23,11 @@ import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
 @TeleOp
 public class MecanumTeleOp extends OpMode {
 
+    //0.00370370 = 1 degree on a 270 servo
     final int LIFT_ROT_COEFFICIENT = 39;
     final int LIFT_EXT_COEFFICIENT = 30;
     final double STARTING_LENGTH = 14.5;
+    final double SERVO_DELTA_PER_DEGREE_270 = 0.00370370370;
     final int MINIMUM_DEGREES = 55;
     NewMecanumDrive drive;
     InputHandler inputHandler;
@@ -144,7 +146,7 @@ public class MecanumTeleOp extends OpMode {
 
 
         // Display the current value
-
+        telemetry.addData("Wrist Position: ", wrist.getPosition());
         telemetry.addData("deltatime: ", deltaTime);
         telemetry.addData("Joystick X ", gamepad1.right_stick_x);
         telemetry.addData("Joystick Y ", gamepad1.right_stick_y);
@@ -178,6 +180,7 @@ public class MecanumTeleOp extends OpMode {
             }
             telemetry.addData("Trig Theta Angle: ", theta);
             liftRotation.setTarget((int) (((theta * rotationTicksPerDegree) - (MINIMUM_DEGREES * rotationTicksPerDegree))));
+            wrist.setPosition(0.5 - theta * SERVO_DELTA_PER_DEGREE_270);
 
             //liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
             //liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
@@ -210,6 +213,13 @@ public class MecanumTeleOp extends OpMode {
         mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
 
         liftRotControl = gamepad2.left_stick_y;
+
+        if(inputHandler.active("D1:DPAD_UP")){
+            wrist.setPosition(wrist.getPosition()+0.005);
+        }
+        if(inputHandler.active("D1:DPAD_DOWN")){
+            wrist.setPosition(wrist.getPosition()-0.005);
+        }
 
         if(!hanging) {
             liftExtControl = gamepad2.right_stick_y;
