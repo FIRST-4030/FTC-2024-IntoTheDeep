@@ -250,11 +250,11 @@ public class MecanumTeleOp extends OpMode {
             liftNotAtPosition = true;
         }
 
-        if(inputHandler.up("D2:LT")){
+        if(inputHandler.up("D2:LB")){
             sampleCollectionPos();
         }
 
-        if(inputHandler.up("D2:LB")){
+        if(inputHandler.up("D2:LT")){
             driverControlled = false;
             highTarget = !highTarget;
             lowTarget = !lowTarget;
