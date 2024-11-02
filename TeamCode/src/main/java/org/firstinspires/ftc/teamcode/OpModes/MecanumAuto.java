@@ -334,21 +334,25 @@ public class MecanumAuto extends LinearOpMode {
                             .strafeTo(depositPose.toPose2d().position)
                             .build()
             );
+            telemetry.addData("start","");
             Actions.runBlocking(
                     highBucketPrep()
             );
+            telemetry.addData("highBucketPrep","");
             Actions.runBlocking(
                     openClaw()
             );
+            telemetry.addData("openClaw","");
             Actions.runBlocking(
                     floorPickUpPrep()
             );
+            telemetry.addData("floorPickUpPrep","");
             Actions.runBlocking(
                     drive.actionBuilder(depositPose.toPose2d())
                             .strafeTo(collectionPose.toPose2d().position)
                             .build()
             );
-
+            telemetry.addData("move","");
             Actions.runBlocking(
                     pickUp()
             );
