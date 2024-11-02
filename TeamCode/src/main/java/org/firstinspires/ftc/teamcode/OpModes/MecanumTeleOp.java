@@ -81,6 +81,7 @@ public class MecanumTeleOp extends OpMode {
     boolean resetHeading = false;
     boolean clawOpen = true;
 
+
     double liftRotControl = 0;
     double liftExtControl = 0;
     double yawToFix;
@@ -110,7 +111,6 @@ public class MecanumTeleOp extends OpMode {
         imu.resetYaw();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         globalIMUHeading = or.thirdAngle;
-
 
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0));

@@ -100,6 +100,7 @@ public class NewMecanumDrive {
         public double axialVelGain = 0.0; //0.3;
         public double lateralVelGain = 0.0; //0.5;
         public double headingVelGain = 0.0; //0.5 // shared with turn
+
     }
 
     public static Params PARAMS = new Params();
@@ -309,6 +310,7 @@ public class NewMecanumDrive {
 
         //convertToFieldCentric();
         //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
+        convertToFieldCentric();
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
         leftFront.setPower((joystickY + joystickX + joystickR)/normalization);
         leftBack.setPower((joystickY - joystickX + joystickR)/normalization);
