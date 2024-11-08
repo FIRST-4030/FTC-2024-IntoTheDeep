@@ -199,6 +199,9 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("Rot: ", liftRotation.target);
         telemetry.addData("Ext: ", liftExtension.target);
 
+        telemetry.addData("Rot Actual: ", liftRotation.getLiftMotor().getCurrentPosition());
+        telemetry.addData("Ext Actual: ", liftExtension.getLiftMotor().getCurrentPosition());
+
         if(liftExtension.getLiftMotor().getCurrentPosition() > 925
                 && wrist.getPosition() < 0.6
                 && wrist.getPosition() > 0.4) {
@@ -330,7 +333,7 @@ public class MecanumTeleOp extends OpMode {
         trig = false;
         basket = false;
         liftRotation.setTarget(886);
-        liftExtension.setTarget(500);
+        liftExtension.setTarget(200);
         clawServo.setPosition(0.95);
         clawOpen = false;
         wrist.setPosition(0.5);
