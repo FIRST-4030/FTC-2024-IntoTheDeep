@@ -27,6 +27,19 @@ android {
         }
         jniLibs.useLegacyPackaging true
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    buildTypes {
+        release {
+            buildConfigField "String", "COMPILATION_DATE", "\"${new Date()}\""
+        }
+        debug {
+            buildConfigField "String", "COMPILATION_DATE", "\"${new Date()}\""
+        }
+    }
 }
 
 repositories {

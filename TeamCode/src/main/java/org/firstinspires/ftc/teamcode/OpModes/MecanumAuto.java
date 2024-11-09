@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import android.text.ParcelableSpan;
-
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -16,6 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.LinearMotorController;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
@@ -84,6 +83,7 @@ public class MecanumAuto extends LinearOpMode {
             if(inputHandler.up("D1:RT")){
                 side = !side;
             }
+            telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
             telemetry.addData("-----Initialization-----", "");
             telemetry.addLine();
             telemetry.addData("Auto Mode: ", side ? "Sample Scoring" : "Specimen Scoring");
