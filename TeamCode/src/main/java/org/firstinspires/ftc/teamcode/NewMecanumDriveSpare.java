@@ -5,7 +5,9 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.*;
+import com.acmerobotics.roadrunner.AccelConstraint;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Actions;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HolonomicController;
@@ -14,13 +16,20 @@ import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Pose2dDual;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.PoseVelocity2dDual;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
+import com.acmerobotics.roadrunner.ProfileParams;
+import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.TimeTurn;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Twist2dDual;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 import com.acmerobotics.roadrunner.ftc.Encoder;
@@ -38,21 +47,22 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.messages.MecanumLocalizerInputsMessage;
 import org.firstinspires.ftc.teamcode.messages.PoseMessage;
 
-import java.lang.Math;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 @Config
-public class MecanumDrive {
+public class NewMecanumDriveSpare {
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
@@ -60,11 +70,11 @@ public class MecanumDrive {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+                RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
         // drive model parameters
         public double inPerTick = 0.00057336671;
-        public double lateralInPerTick = 0.0004852192942301951; //Not used Roadrunner lateral tuning, potentially bad
+        public double lateralInPerTick = 0.0005854192942301951;
         public double trackWidthTicks = 28132;
 
         // feedforward parameters (in tick units)
@@ -87,9 +97,10 @@ public class MecanumDrive {
         public double lateralGain = 15.0;
         public double headingGain = 15.0; // shared with turn
 
-        public double axialVelGain = 0.3;
-        public double lateralVelGain = 0.5;
-        public double headingVelGain = 0.5; // shared with turn
+        public double axialVelGain = 0.0; //0.3;
+        public double lateralVelGain = 0.0; //0.5;
+        public double headingVelGain = 0.0; //0.5 // shared with turn
+
     }
 
     public static Params PARAMS = new Params();
@@ -108,10 +119,12 @@ public class MecanumDrive {
             new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
 
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
+    public DcMotorEx liftExtender, liftRotator;
 
     public final VoltageSensor voltageSensor;
 
     public final LazyImu lazyImu;
+    public final LazyImu teleOpImu;
 
     public final Localizer localizer;
     public Pose2d pose;
@@ -123,6 +136,15 @@ public class MecanumDrive {
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
 
+
+    public double joystickX;
+    public double joystickY;
+    public double joystickR;
+    public double robotAngle;
+
+    boolean dpadInUse = false;
+    public ElapsedTime correctionTimer = new ElapsedTime();
+
     public class DriveLocalizer implements Localizer {
         public final Encoder leftFront, leftBack, rightBack, rightFront;
         public final IMU imu;
@@ -132,19 +154,16 @@ public class MecanumDrive {
         private boolean initialized;
 
         public DriveLocalizer() {
-            leftFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftFront));
-            leftBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftBack));
-            rightBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightBack));
-            rightFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightFront));
+            leftFront = new OverflowEncoder(new RawEncoder(NewMecanumDriveSpare.this.leftFront));
+            leftBack = new OverflowEncoder(new RawEncoder(NewMecanumDriveSpare.this.leftBack));
+            rightBack = new OverflowEncoder(new RawEncoder(NewMecanumDriveSpare.this.rightBack));
+            rightFront = new OverflowEncoder(new RawEncoder(NewMecanumDriveSpare.this.rightFront));
 
             imu = lazyImu.get();
 
             // TODO: reverse encoders if needed
             //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         }
-
-
-
 
         @Override
         public Twist2dDual<Time> update() {
@@ -210,7 +229,7 @@ public class MecanumDrive {
         }
     }
 
-    public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
+    public NewMecanumDriveSpare(HardwareMap hardwareMap, Pose2d pose) {
         this.pose = pose;
 
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
@@ -226,6 +245,8 @@ public class MecanumDrive {
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
+
+
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -233,6 +254,8 @@ public class MecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        //leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        //leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -241,11 +264,72 @@ public class MecanumDrive {
         lazyImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
                 PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
 
+        teleOpImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
+                PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         localizer = new TwoDeadWheelLocalizerSpare(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
+    }
+
+    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset, double powerCoefficient, boolean slowed) {
+        //checks to see if any dpad buttons are pressed
+        for (double power : dpadPowers) {
+            if (power != 0){
+                dpadInUse = true;
+                break;
+            }
+        }
+        if(reset){
+            teleOpImu.get().resetYaw();
+            reset = false;
+        }
+        //get the current robot heading to use for field centric
+        robotAngle = teleOpImu.get().getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        //y values are inverted
+        joystickY = -1 * Math.pow(control.y, 3);
+        joystickX = Math.pow(control.x, 3);
+        joystickR = control.z * 0.3;
+        //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
+        if(dpadInUse){
+            joystickY = dpadPowers[0] + dpadPowers[1];
+            joystickX = dpadPowers[2] + dpadPowers[3];
+            joystickR = 0;
+            dpadInUse = false;
+        }
+        //scale rotX and then scale all values by a coefficient
+        joystickX *= 1.1;
+        joystickX *= powerCoefficient;
+        joystickY *= powerCoefficient;
+        joystickR *= powerCoefficient;
+        if(!slowed) {
+            holdHeading(headingError);
+        }
+
+
+        //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
+        //convertToFieldCentric();
+        double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
+        leftFront.setPower((joystickY + joystickX + joystickR)/normalization);
+        leftBack.setPower((joystickY - joystickX + joystickR)/normalization);
+        rightFront.setPower((joystickY - joystickX - joystickR)/normalization);
+        rightBack.setPower((joystickY + joystickX - joystickR)/normalization);
+        return reset;
+    }
+
+    public void convertToFieldCentric(){
+        joystickX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
+        joystickY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
+    }
+
+    public void holdHeading(double headingError){
+        if(Math.abs(joystickR) > 0.05){
+            correctionTimer.reset();
+        }
+        if(correctionTimer.milliseconds() > 300){
+            joystickR = headingError * 1.2;
+        }
     }
 
     public void setDrivePowers(PoseVelocity2d powers) {
@@ -492,6 +576,8 @@ public class MecanumDrive {
                 defaultVelConstraint, defaultAccelConstraint
         );
     }
+
+
 
 
 }
