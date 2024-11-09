@@ -33,7 +33,7 @@ public class MecanumTeleOp extends OpMode {
     NewMecanumDrive drive;
     InputHandler inputHandler;
     Vector3d mecanumController;
-    LinearMotorController liftRotation, liftExtension;
+    LinearMotorController liftRotation, liftExtension/*, hangMotor*/;
     Servo clawServo, wrist;
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  0.8;     // Maximum rotational position
@@ -248,6 +248,10 @@ public class MecanumTeleOp extends OpMode {
             headingTimer.reset();
         }
 
+        if(inputHandler.up("D1:DPAD_UP")){
+            secondLevelHang();
+        }
+
         if(inputHandler.up("D2:Y")){
             scoreSpecimen = true;
             liftNotAtPosition = true;
@@ -328,7 +332,10 @@ public class MecanumTeleOp extends OpMode {
 
         }
     }
-
+    public void secondLevelHang()
+    {
+        //hangMotor.setTarget(10);
+    }
     public void specimenCollectionPos(){
         trig = false;
         basket = false;
