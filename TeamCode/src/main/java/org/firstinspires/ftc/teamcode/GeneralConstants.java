@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 public class GeneralConstants {
 
+    public static final String PRIMARY_BOT = "7462-RC";
+
     //These constant names allow for more effective grouping when the
     //annotation, "Teleop" or "Autonomous", is used to mark an opmode
     //to submit to the driver station or dashboard

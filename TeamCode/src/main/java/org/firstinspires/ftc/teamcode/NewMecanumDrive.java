@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.GeneralConstants.PRIMARY_BOT;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.canvas.Canvas;
@@ -73,50 +75,48 @@ public class NewMecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT;
 
         // drive model parameters
-        public double inPerTick = 0.00057336671;
-        public double lateralInPerTick = 0.0005854192942301951;
-        public double trackWidthTicks = 28132;
+        public double inPerTick;
+        public double lateralInPerTick;
+        public double trackWidthTicks;
 
         // feedforward parameters (in tick units)
         //kV: 0.00010920853856016985, kS: 0.6733835719712635
-        public double kS = 0.6733835719712635;
-        public double kV = 0.00010920853856016985;
-        public double kA = 0.000009;
+        public double kS;
+        public double kV;
+        public double kA;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 50;
-        public double minProfileAccel = -30;
-        public double maxProfileAccel = 50;
+        public double maxWheelVel;
+        public double minProfileAccel;
+        public double maxProfileAccel;
 
         // turn profile parameters (in radians)
-        public double maxAngVel = Math.PI; // shared with path
-        public double maxAngAccel = Math.PI;
+        public double maxAngVel; // shared with path
+        public double maxAngAccel;
 
         // path controller gains
-        public double axialGain = 8.0;
-        public double lateralGain = 15.0;
-        public double headingGain = 15.0; // shared with turn
+        public double axialGain;
+        public double lateralGain;
+        public double headingGain; // shared with turn
 
-        public double axialVelGain = 0.0; //0.3;
-        public double lateralVelGain = 0.0; //0.5;
-        public double headingVelGain = 0.0; //0.5 // shared with turn
-
+        public double axialVelGain;
+        public double lateralVelGain;
+        public double headingVelGain; // shared with turn
     }
+
+    public static String networkName;
 
     public static Params PARAMS = new Params();
 
-    public final MecanumKinematics kinematics = new MecanumKinematics(
-            PARAMS.inPerTick * PARAMS.trackWidthTicks, PARAMS.inPerTick / PARAMS.lateralInPerTick);
+    ControlHub controlHub = new ControlHub();
 
-    public final TurnConstraints defaultTurnConstraints = new TurnConstraints(
-            PARAMS.maxAngVel, -PARAMS.maxAngAccel, PARAMS.maxAngAccel);
-    public final VelConstraint defaultVelConstraint =
-            new MinVelConstraint(Arrays.asList(
-                    kinematics.new WheelVelConstraint(PARAMS.maxWheelVel),
-                    new AngularVelConstraint(PARAMS.maxAngVel)
-            ));
-    public final AccelConstraint defaultAccelConstraint =
-            new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
+    public MecanumKinematics kinematics = null;
+
+    public TurnConstraints defaultTurnConstraints = null;
+
+    public VelConstraint defaultVelConstraint = null;
+
+    public AccelConstraint defaultAccelConstraint = null;
 
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public DcMotorEx liftExtender, liftRotator;
@@ -232,6 +232,14 @@ public class NewMecanumDrive {
     public NewMecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
         this.pose = pose;
 
+        networkName = controlHub.getNetworkName();
+
+        // set PARAMS based upon the network you are connected to
+        setParams();
+
+        // initialize some classes after some PARAMS are set
+        initializeOtherParameters();
+
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
 
         for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
@@ -245,8 +253,6 @@ public class NewMecanumDrive {
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
 
-
-
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -254,9 +260,15 @@ public class NewMecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
+            leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        else {
+            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -305,7 +317,6 @@ public class NewMecanumDrive {
         if(!slowed) {
             holdHeading(headingError);
         }
-
 
         //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
         //convertToFieldCentric();
@@ -576,7 +587,64 @@ public class NewMecanumDrive {
         );
     }
 
+    private void initializeOtherParameters() {
 
+        kinematics = new MecanumKinematics(
+                PARAMS.inPerTick * PARAMS.trackWidthTicks, PARAMS.inPerTick / PARAMS.lateralInPerTick);
 
+        defaultTurnConstraints = new TurnConstraints(
+                PARAMS.maxAngVel, -PARAMS.maxAngAccel, PARAMS.maxAngAccel);
 
+        defaultVelConstraint = new MinVelConstraint(Arrays.asList(
+                kinematics.new WheelVelConstraint(PARAMS.maxWheelVel),
+                new AngularVelConstraint(PARAMS.maxAngVel)));
+
+        defaultAccelConstraint = new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
+    }
+
+    private void setParams() {
+
+        if (networkName.equals(PRIMARY_BOT)) {
+
+            PARAMS.inPerTick = 0.00057336671;
+            PARAMS.lateralInPerTick = 0.0005854192942301951;
+            PARAMS.trackWidthTicks = 28132;
+
+            PARAMS.kS = 0.6733835719712635;
+            PARAMS.kV = 0.00010920853856016985;
+            PARAMS.kA = 0.000009;
+
+            PARAMS.maxWheelVel = 50;
+            PARAMS.minProfileAccel = -30;
+            PARAMS.maxProfileAccel = 50;
+
+            PARAMS.axialGain = 8.0;
+            PARAMS.lateralGain = 15.0;
+            PARAMS.headingGain = 15.0;
+
+        } else {
+//            PARAMS.inPerTick = 0.0019648;
+//            PARAMS.lateralInPerTick = 0.0016057555324865023;
+//            PARAMS.trackWidthTicks = 6225.066482281036;
+//
+//            PARAMS.kS = 1.0841855880718683;
+//            PARAMS.kV = 0.00038454842407831713;
+//            PARAMS.kA = 0.00005;
+//
+//            PARAMS.maxWheelVel = 50;
+//            PARAMS.minProfileAccel = -30;
+//            PARAMS.maxProfileAccel = 50;
+//
+//            PARAMS.axialGain = 10.0;
+//            PARAMS.lateralGain = 2.0;
+//            PARAMS.headingGain = 5.0;
+        }
+
+        PARAMS.maxAngVel = Math.PI;
+        PARAMS.maxAngAccel = Math.PI;
+
+        PARAMS.axialVelGain = 0.0;
+        PARAMS.lateralVelGain = 0.0;
+        PARAMS.headingVelGain = 0.0;
+    }
 }

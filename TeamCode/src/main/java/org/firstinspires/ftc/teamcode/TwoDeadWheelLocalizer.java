@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.teamcode.GeneralConstants.PRIMARY_BOT;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.Rotation2d;
@@ -25,8 +27,8 @@ import org.firstinspires.ftc.teamcode.messages.TwoDeadWheelInputsMessage;
 @Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks = -13951; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks;
+        public double perpXTicks;
     }
 
     public static Params PARAMS = new Params();
@@ -43,6 +45,10 @@ public final class TwoDeadWheelLocalizer implements Localizer {
     private boolean initialized;
 
     public TwoDeadWheelLocalizer(HardwareMap hardwareMap, IMU imu, double inPerTick) {
+
+        // set PARAMS based upon the network you are connected to
+        setParams();
+
         // TODO: make sure your config has **motors** with these names (or change them)
         //   the encoders should be plugged into the slot matching the named motor
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
@@ -66,9 +72,9 @@ public final class TwoDeadWheelLocalizer implements Localizer {
 
         YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.RADIANS);
-        angularVelocity.xRotationRate *= Math.PI/180;
-        angularVelocity.yRotationRate *= Math.PI/180;
-        angularVelocity.zRotationRate *= Math.PI/180;
+        angularVelocity.xRotationRate *= Math.PI / 180;
+        angularVelocity.yRotationRate *= Math.PI / 180;
+        angularVelocity.zRotationRate *= Math.PI / 180;
 
 
         FlightRecorder.write("TWO_DEAD_WHEEL_INPUTS", new TwoDeadWheelInputsMessage(parPosVel, perpPosVel, angles, angularVelocity));
@@ -102,16 +108,16 @@ public final class TwoDeadWheelLocalizer implements Localizer {
 
         Twist2dDual<Time> twist = new Twist2dDual<>(
                 new Vector2dDual<>(
-                        new DualNum<Time>(new double[] {
+                        new DualNum<Time>(new double[]{
                                 parPosDelta - PARAMS.parYTicks * headingDelta,
                                 parPosVel.velocity - PARAMS.parYTicks * headingVel,
                         }).times(inPerTick),
-                        new DualNum<Time>(new double[] {
+                        new DualNum<Time>(new double[]{
                                 perpPosDelta - PARAMS.perpXTicks * headingDelta,
                                 perpPosVel.velocity - PARAMS.perpXTicks * headingVel,
                         }).times(inPerTick)
                 ),
-                new DualNum<>(new double[] {
+                new DualNum<>(new double[]{
                         headingDelta,
                         headingVel,
                 })
@@ -122,5 +128,16 @@ public final class TwoDeadWheelLocalizer implements Localizer {
         lastHeading = heading;
 
         return twist;
+    }
+
+    private void setParams() {
+
+        if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
+            PARAMS.parYTicks = -13951; // y position of the parallel encoder (in tick units)
+            PARAMS.perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
+        } else {
+            PARAMS.parYTicks = 1; // y position of the parallel encoder (in tick units)
+            PARAMS.perpXTicks = 1; // x position of the perpendicular encoder (in tick units)
+        }
     }
 }
