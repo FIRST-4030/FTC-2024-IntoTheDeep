@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -40,6 +41,7 @@ public class MecanumTeleOp extends OpMode {
     boolean slowMode = false;
     boolean trig = false;
 
+
     double driveCoefficient = 1;
     IMU imu;
     Orientation or;
@@ -58,11 +60,13 @@ public class MecanumTeleOp extends OpMode {
     boolean hanging = false;
     boolean basket = false;
 
+    TouchSensor rotationTouchSensor;
+
     //TRIG BELOW:
 
     double theta;
     static final double HIGH_TARGET = 2.5;
-    static final double LOW_TARGET = 5.25;
+    static final double LOW_TARGET = 5.5;
     double controlledTarget = 2.5;
     double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
@@ -98,9 +102,9 @@ public class MecanumTeleOp extends OpMode {
         //init dpad hashmap with each dpad value as unpressed
         imu = hardwareMap.get(IMU.class, "imu");
         clawServo = hardwareMap.get(Servo.class, "claw");
-        clawServo.setPosition(0.95);
         wrist = hardwareMap.get(Servo.class, "wrist");
-        wrist.setPosition(1);
+        rotationTouchSensor = hardwareMap.get(TouchSensor.class, "rotationSensor");
+
 
         /*
         imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
@@ -121,6 +125,7 @@ public class MecanumTeleOp extends OpMode {
 
 
 
+
         clawTimer = new ElapsedTime();
 
         //Initialize gamepad handler
@@ -133,6 +138,15 @@ public class MecanumTeleOp extends OpMode {
         //paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
         //paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+    }
+
+    public void start(){
+        ElapsedTime startTimer = new ElapsedTime();
+        while(startTimer.milliseconds() <= 300) {
+            clawServo.setPosition(0.95);
+            wrist.setPosition(1);
+        }
+        initializeArm();
     }
 
     @Override
@@ -394,4 +408,24 @@ public class MecanumTeleOp extends OpMode {
     public void outputLog() {
 
     }
+
+    public void initializeArm() {
+        liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftRotation.getLiftMotor().setPower(-0.5);
+        wrist.setPosition(0.95);
+        while (true) {
+            if (rotationTouchSensor.isPressed()) {
+                liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                liftRotation.getLiftMotor().setPower(1.0);
+                liftRotation.setTarget(5);
+                liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftRotation.getLiftMotor().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                break;
+            }
+
+        }
+    }
+
+
 }
