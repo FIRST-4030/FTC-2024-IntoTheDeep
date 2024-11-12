@@ -240,16 +240,17 @@ public class MecanumAuto extends LinearOpMode {
                     resetArm()
             );
 
-            sleep(500);
-
-            Actions.runBlocking(
-                    collectionPrep()
-            );
 
             Actions.runBlocking(
                     drive.actionBuilder(depositPose2.toPose2d())
                             .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                             .build()
+            );
+
+            sleep(500);
+
+            Actions.runBlocking(
+                    collectionPrep()
             );
 
             sleep(500);
