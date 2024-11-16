@@ -118,7 +118,7 @@ public class MecanumTeleOp extends OpMode {
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0));
         liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, false);
+                1390, true);
         liftRotation = new LinearMotorController(hardwareMap, "swing",
                 3000, false);
 
@@ -347,6 +347,8 @@ public class MecanumTeleOp extends OpMode {
     }
     public void secondLevelHang()
     {
+        clawServo.setPosition(0.95);
+        wrist.setPosition(0.2);
         //hangMotor.setTarget(10);
     }
     public void specimenCollectionPos(){

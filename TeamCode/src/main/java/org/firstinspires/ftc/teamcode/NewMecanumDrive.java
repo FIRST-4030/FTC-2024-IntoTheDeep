@@ -614,9 +614,9 @@ public class NewMecanumDrive {
             PARAMS.kV = 0.00010920853856016985;
             PARAMS.kA = 0.000009;
 
-            PARAMS.maxWheelVel = 50;
+            PARAMS.maxWheelVel = 43;
             PARAMS.minProfileAccel = -30;
-            PARAMS.maxProfileAccel = 50;
+            PARAMS.maxProfileAccel = 40;
 
             PARAMS.axialGain = 8.0;
             PARAMS.lateralGain = 15.0;
