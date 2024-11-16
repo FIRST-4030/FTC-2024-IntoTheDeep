@@ -266,8 +266,10 @@ public class NewMecanumDrive {
             rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
         }
         else {
-            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+            rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         }
 
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
@@ -623,21 +625,21 @@ public class NewMecanumDrive {
             PARAMS.headingGain = 15.0;
 
         } else {
-//            PARAMS.inPerTick = 0.0019648;
-//            PARAMS.lateralInPerTick = 0.0016057555324865023;
-//            PARAMS.trackWidthTicks = 6225.066482281036;
-//
-//            PARAMS.kS = 1.0841855880718683;
-//            PARAMS.kV = 0.00038454842407831713;
-//            PARAMS.kA = 0.00005;
-//
-//            PARAMS.maxWheelVel = 50;
-//            PARAMS.minProfileAccel = -30;
-//            PARAMS.maxProfileAccel = 50;
-//
-//            PARAMS.axialGain = 10.0;
-//            PARAMS.lateralGain = 2.0;
-//            PARAMS.headingGain = 5.0;
+            PARAMS.inPerTick = 0.000566864859;
+            PARAMS.lateralInPerTick = 0.00046837048125481455;
+            PARAMS.trackWidthTicks = 22580.573725252547;
+
+            PARAMS.kS = 0.8162221711868276;
+            PARAMS.kV = 0.00011157757280198724;
+            PARAMS.kA = 0.00005;
+
+            PARAMS.maxWheelVel = 50;
+            PARAMS.minProfileAccel = -30;
+            PARAMS.maxProfileAccel = 50;
+
+            PARAMS.axialGain = 10.0;
+            PARAMS.lateralGain = 2.0;
+            PARAMS.headingGain = 5.0;
         }
 
         PARAMS.maxAngVel = Math.PI;
