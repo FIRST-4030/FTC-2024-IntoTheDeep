@@ -8,12 +8,16 @@ public class LinearMotorController {
     DcMotor liftMotor;
     public int target;
     public int tickLimit;
-    public LinearMotorController(HardwareMap hardwareMap, String liftMotorName, int maxVal, boolean reverse){
+    public LinearMotorController(HardwareMap hardwareMap, String liftMotorName, int maxVal, boolean reverse, boolean reset){
         liftMotor = hardwareMap.get(DcMotor.class, liftMotorName);
-        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        if(reset) {
+            liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
         liftMotor.setPower(1);
         if(reverse) {liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);}
-        liftMotor.setTargetPosition(0);
+        if(reset) {
+            liftMotor.setTargetPosition(0);
+        }
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         tickLimit = maxVal;

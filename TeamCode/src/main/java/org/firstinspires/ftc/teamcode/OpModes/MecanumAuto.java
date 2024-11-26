@@ -62,9 +62,9 @@ public class MecanumAuto extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         runtime.reset();
         liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, true);
+                1390, true, true);
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                3000, false);
+                3000, false,true);
         wrist = hardwareMap.get(Servo.class, "wrist");
         clawServo = hardwareMap.get(Servo.class, "claw");
         inputHandler = InputAutoMapper.normal.autoMap(this);
@@ -96,7 +96,7 @@ public class MecanumAuto extends LinearOpMode {
             depositPose = new Pose2dWrapper(15.8, -27.5, 1.5708);
             pushPrep1 = new Pose2dWrapper(40.8, -30.75, 1.5708);
             pushPrep2 = new Pose2dWrapper(39.8, -7.75, 1.5708);
-            pushPrep3 = new Pose2dWrapper(51.8, -7.75, 1.5708);
+            pushPrep3 = new Pose2dWrapper(52.8, -7.75, 1.5708);
             brickPush = new Pose2dWrapper(51.8, -51.75, 1.5708);
             collectionPose = new Pose2dWrapper(46.5, -66.5, 0);
             intermediaryPose = new Pose2dWrapper(43, -63.5, 1.5708);
@@ -107,26 +107,26 @@ public class MecanumAuto extends LinearOpMode {
             ///Experimental Auto-Code, optimized 4-Specimen auto pathing
                 if(experimental){
                     startPose = new Pose2dWrapper(15.8, -55.75, 4.7123);
-                    depositPose = new Pose2dWrapper(3.8, -28.5, 4.7123);
-                    pushPrep1 = new Pose2dWrapper(40.8, -31.75, 4.7123);
+                    depositPose = new Pose2dWrapper(1.8, -28.5, 4.7123);
+                    pushPrep1 = new Pose2dWrapper(40.8, -29.75, 4.7123);
                     pushPrep2 = new Pose2dWrapper(39.8, -12, 4.7123);
-                    pushPrep3 = new Pose2dWrapper(53, -7.75, 4.7123);
+                    pushPrep3 = new Pose2dWrapper(56, -7.75, 4.7123);
                     brickPush = new Pose2dWrapper(54.8, -41.75, 4.7123);
-                    pushPrep4 = new Pose2dWrapper(51.8, -12, 4.7123);
-                    pushPrep5 = new Pose2dWrapper(63, -7.75, 4.7123);
-                    brickPush2 = new Pose2dWrapper(63.8, -41.75, 4.7123);
+                    pushPrep4 = new Pose2dWrapper(54.8, -10.5, 4.7123);
+                    pushPrep5 = new Pose2dWrapper(59.5, -10.5, 4.7123);
+                    brickPush2 = new Pose2dWrapper(59.5, -49, 4.7123);
                     collectionPose = new Pose2dWrapper(44.5, -46.5, 4.7123);
                     intermediaryPose = new Pose2dWrapper(15.8, -31.75, 4.7123);
-                    depositPose2 = new Pose2dWrapper(7.8, -28.5, 4.7123);
-                    depositPose3 = new Pose2dWrapper(11.8, -28.5, 4.7123);
-                    depositPose4 = new Pose2dWrapper(12.8, -28.5, 4.7123);
+                    depositPose2 = new Pose2dWrapper(5.8, -28.5, 4.7123);
+                    depositPose3 = new Pose2dWrapper(9.8, -28.5, 4.7123);
+                    depositPose4 = new Pose2dWrapper(10.8, -28.5, 4.7123);
                     parkPose = new Pose2dWrapper(51.8, -51.75, 4.7123);
 
                 }
         } else {
             ///Positions for when scoring on Sample Side
             startPose = new Pose2dWrapper(-32, -56, 1.5708);
-            depositPose = new Pose2dWrapper(-63.5, -46.5, 1.5708);
+            depositPose = new Pose2dWrapper(-61, -55.5, Math.toRadians(60));
             collectionPose = new Pose2dWrapper(-49, -35, 1.5708);
             collectionPose2 = new Pose2dWrapper(-58.5, -35, 1.5708);
             collectionPose3 = new Pose2dWrapper(-62.75, -23, Math.toRadians(125));
@@ -155,22 +155,28 @@ public class MecanumAuto extends LinearOpMode {
                                 .strafeTo(depositPose.toPose2d().position)
                                 .build()
                 );
-                sleep(300);
                 Actions.runBlocking(extendScore());
-                sleep(500);
+                sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 ///Cycle 2
                 Actions.runBlocking(stow());
+
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 //.splineToConstantHeading(intermediaryPose.toPose2d().position, intermediaryPose.toPose2d().heading)
+                                .setTangent(0)
                                 .splineToConstantHeading(pushPrep1.toPose2d().position, 1.5708)
                                 .splineToConstantHeading(pushPrep2.toPose2d().position, 3.1415)
                                 .splineToConstantHeading(pushPrep3.toPose2d().position, 3.1415)
                                 .splineToConstantHeading(brickPush.toPose2d().position, brickPush.toPose2d().heading)
-                                .splineToConstantHeading(pushPrep4.toPose2d().position, 3.1415)
-                                .splineToConstantHeading(pushPrep5.toPose2d().position, 3.1415)
+                                .build()
+                );
+                Actions.runBlocking(
+                        drive.actionBuilder(brickPush.toPose2d())
+                                .setTangent(1.5708)
+                                .splineToConstantHeading(pushPrep4.toPose2d().position, 1.5708)
+                                .splineToConstantHeading(pushPrep5.toPose2d().position, 3.1415*2)
                                 .splineToConstantHeading(brickPush2.toPose2d().position, brickPush2.toPose2d().heading)
                                 .build()
                 );
@@ -217,25 +223,23 @@ public class MecanumAuto extends LinearOpMode {
                 );
                 sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(300);
+                sleep(200);
                 Actions.runBlocking(collect());
-                sleep(350);
-                Actions.runBlocking(experimentalPreScore());
                 sleep(300);
+                Actions.runBlocking(experimentalPreScore());
+                sleep(100);
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeTo(depositPose2.toPose2d().position)
                                 .build()
                 );
-                sleep(300);
                 Actions.runBlocking(
                         extendScore()
                 );
-                sleep(500);
+                sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(250);
                 Actions.runBlocking(experimentalCollectionPrep());
-                sleep(500);
                 ///Cycle 3
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose2.toPose2d())
@@ -244,18 +248,17 @@ public class MecanumAuto extends LinearOpMode {
                 );
                 sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(300);
+                sleep(200);
                 Actions.runBlocking(collect());
-                sleep(350);
+                sleep(300);
                 Actions.runBlocking(experimentalPreScore());
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeTo(depositPose3.toPose2d().position)
                                 .build()
                 );
-                sleep(300);
                 Actions.runBlocking(extendScore());
-                sleep(500);
+                sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(250);
                 ///Cycle 4
@@ -267,18 +270,18 @@ public class MecanumAuto extends LinearOpMode {
                 );
                 sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(250);
+                sleep(200);
                 Actions.runBlocking(collect());
-                sleep(350);
+                sleep(300);
                 Actions.runBlocking(experimentalPreScore());
-                sleep(150);
+                sleep(100);
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeTo(depositPose4.toPose2d().position)
                                 .build()
                 );
                 Actions.runBlocking(extendScore());
-                sleep(500);
+                sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 Actions.runBlocking(stow());
@@ -421,84 +424,170 @@ public class MecanumAuto extends LinearOpMode {
                 );
             }
         } else {
-            /// Auto code for when scoring Samples
+            if (!experimental) {
+                /// Auto code for when scoring Samples
 
-            ///Cycle 1
-            Actions.runBlocking(highBucketPrep());
-            Actions.runBlocking(
-                    drive.actionBuilder(startPose.toPose2d())
-                            .strafeTo(depositPose.toPose2d().position)
-                            .build()
-            );
-                sleep(300);
-            Actions.runBlocking(openClaw());
-            ///Cycle 2
-            Actions.runBlocking(
-                    drive.actionBuilder(depositPose.toPose2d())
-                            .strafeTo(collectionPose.toPose2d().position)
-                            .build()
-            );
-            Actions.runBlocking(floorPickUpPrep());
+                ///Cycle 1
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(startPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(500);
+                Actions.runBlocking(openClaw());
+                ///Cycle 2
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                                .build()
+                );
+                Actions.runBlocking(floorPickUpPrep());
                 sleep(1500);
-            Actions.runBlocking(pickUp());
+                Actions.runBlocking(pickUp());
                 sleep(300);
-            Actions.runBlocking(highBucketPrep());
-            Actions.runBlocking(
-                    drive.actionBuilder(collectionPose.toPose2d())
-                            .strafeTo(depositPose.toPose2d().position)
-                            .build()
-            );
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
                 sleep(500);
-            Actions.runBlocking(openClaw());
-                sleep(500);
-            Actions.runBlocking(
-                    drive.actionBuilder(depositPose.toPose2d())
-                            .strafeTo(collectionPose2.toPose2d().position)
-                            .build()
-            );
-            Actions.runBlocking(floorPickUpPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.heading)
+                                .build()
+                );
+                Actions.runBlocking(floorPickUpPrep());
                 sleep(1500);
-            Actions.runBlocking(pickUp());
+                Actions.runBlocking(pickUp());
                 sleep(500);
-            Actions.runBlocking(highBucketPrep());
-            Actions.runBlocking(
-                    drive.actionBuilder(collectionPose2.toPose2d())
-                            .strafeTo(depositPose.toPose2d().position)
-                            .build()
-            );
-                sleep(500);
-            Actions.runBlocking(openClaw());
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose2.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
                 sleep(300);
-            Actions.runBlocking(
-                    drive.actionBuilder(depositPose.toPose2d())
-                            .strafeToLinearHeading(collectionPose3.toPose2d().position, collectionPose3.toPose2d().heading)
-                            .build()
-            );
-            Actions.runBlocking(floorPickUpPrep());
+                Actions.runBlocking(lastFloorPickUpPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose3.toPose2d().position, collectionPose3.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(lastFloorPickUp1());
+                sleep(300);
+                Actions.runBlocking(lastFloorPickUp2());
+                sleep(500);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose3.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(500);
+                Actions.runBlocking(armParkPose());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(preParkPose.toPose2d().position, preParkPose.toPose2d().heading)
+                                .build()
+                );
+                Actions.runBlocking(
+                        drive.actionBuilder(preParkPose.toPose2d())
+                                .strafeToLinearHeading(parkPose.toPose2d().position, preParkPose.toPose2d().heading)
+                                .build()
+                );
                 sleep(1500);
-            Actions.runBlocking(pickUp());
-                sleep(300);
-            Actions.runBlocking(highBucketPrep());
-            Actions.runBlocking(
-                    drive.actionBuilder(collectionPose3.toPose2d())
-                            .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
-                            .build()
-            );
-            Actions.runBlocking(openClaw());
+            } else {
+                /// Auto code for when scoring Samples
+
+                ///Cycle 1
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(startPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
                 sleep(500);
-            Actions.runBlocking(armParkPose());
-            Actions.runBlocking(
-                    drive.actionBuilder(depositPose.toPose2d())
-                            .strafeToLinearHeading(preParkPose.toPose2d().position, preParkPose.toPose2d().heading)
-                            .build()
-            );
-            Actions.runBlocking(
-                    drive.actionBuilder(preParkPose.toPose2d())
-                            .strafeToLinearHeading(parkPose.toPose2d().position, preParkPose.toPose2d().heading)
-                            .build()
-            );
+                Actions.runBlocking(openClaw());
+                ///Cycle 2
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                                .build()
+                );
+                Actions.runBlocking(floorPickUpPrep());
+                sleep(1500);
+                Actions.runBlocking(pickUp());
+                sleep(300);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(500);
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.heading)
+                                .build()
+                );
+                Actions.runBlocking(floorPickUpPrep());
+                sleep(1500);
+                Actions.runBlocking(pickUp());
+                sleep(500);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose2.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(300);
+                Actions.runBlocking(lastFloorPickUpPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose3.toPose2d().position, collectionPose3.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(lastFloorPickUp1());
+                sleep(300);
+                Actions.runBlocking(lastFloorPickUp2());
+                sleep(500);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose3.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(500);
+                Actions.runBlocking(armParkPose());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(preParkPose.toPose2d().position, preParkPose.toPose2d().heading)
+                                .build()
+                );
+                Actions.runBlocking(
+                        drive.actionBuilder(preParkPose.toPose2d())
+                                .strafeToLinearHeading(parkPose.toPose2d().position, preParkPose.toPose2d().heading)
+                                .build()
+                );
                 sleep(1500);
             }
+        }
     }
 
     /**
@@ -730,6 +819,47 @@ public class MecanumAuto extends LinearOpMode {
                 liftRotation.setTarget(500);
                 liftExtension.setTarget(530);
                 wrist.setPosition(0.15);
+                return timer.milliseconds() > 500;
+            }
+
+        };
+    }
+
+    public Action lastFloorPickUpPrep() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftRotation.setTarget(850);
+                liftExtension.setTarget(450);
+                wrist.setPosition(0.15);
+                return timer.milliseconds() > 500;
+            }
+
+        };
+    }
+
+    public Action lastFloorPickUp1() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftRotation.setTarget(500);
+                return timer.milliseconds() > 500;
+            }
+
+        };
+    }
+
+    public Action lastFloorPickUp2() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                clawServo.setPosition(0.95);
                 return timer.milliseconds() > 500;
             }
 

@@ -40,6 +40,7 @@ public class MecanumTeleOp extends OpMode {
     static final double MIN_POS     =  0.3; // Minimum rotational position
     boolean slowMode = false;
     boolean trig = false;
+    boolean experimental = false;
 
 
     double driveCoefficient = 1;
@@ -117,13 +118,9 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0));
-        liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, true);
+        //TODO: Update reset on liftExtension for competition day
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                3000, false);
-
-
-
+                3000, false, true);
 
 
         clawTimer = new ElapsedTime();
@@ -140,12 +137,24 @@ public class MecanumTeleOp extends OpMode {
 
     }
 
+    public void init_loop(){
+        telemetry.addData("Press Y to enable experimental", "");
+        telemetry.addData("Experimental: ", experimental);
+        if(inputHandler.up("D1:Y")){
+            experimental = !experimental;
+        }
+        telemetry.update();
+        inputHandler.loop();
+    }
+
     public void start(){
         ElapsedTime startTimer = new ElapsedTime();
         while(startTimer.milliseconds() <= 300) {
             clawServo.setPosition(0.95);
             wrist.setPosition(1);
         }
+        liftExtension = new LinearMotorController(hardwareMap, "slide",
+                1390, true, false);
         initializeArm();
     }
 
@@ -280,8 +289,16 @@ public class MecanumTeleOp extends OpMode {
             lowTarget = !lowTarget;
         }
 
+        if(inputHandler.up("D2:START")){
+            experimental = !experimental;
+        }
+
         if(scoreSpecimen){
-            postSpecimenScoringPos();
+            if(!experimental) {
+                postSpecimenScoringPos();
+            } else {
+                postSpecimenScoringPos();
+            }
         }
 
         if(resetHeading){
@@ -301,10 +318,18 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D2:A")){
-            specimenCollectionPos();
+            if(!experimental) {
+                specimenCollectionPos();
+            } else {
+                specimenCollectionPos();
+            }
         }
         if(inputHandler.up("D2:RT")){
-            preSpecimenScoringPos();
+            if(!experimental) {
+                preSpecimenScoringPos();
+            } else {
+                preSpecimenScoringPos();
+            }
         }
 
         if(inputHandler.up("D1:RB")){
@@ -361,6 +386,16 @@ public class MecanumTeleOp extends OpMode {
         wrist.setPosition(0.5);
     }
 
+    public void experimentalSpecimenCollectionPos(){
+        trig = false;
+        basket = false;
+        liftRotation.setTarget(825);
+        liftExtension.setTarget(0);
+        clawServo.setPosition(0.3);
+        clawOpen = true;
+        wrist.setPosition(0.5);
+    }
+
     public void highBasket() {
         trig = false;
         basket = true;
@@ -380,6 +415,16 @@ public class MecanumTeleOp extends OpMode {
         wrist.setPosition(0.4);
         clawServo.setPosition(0.95);
         clawOpen = false;
+    }
+
+    public void experimentalPreSpecimenScoringPos(){
+        trig = false;
+        basket = false;
+        wrist.setPosition(0.91);
+        clawServo.setPosition(0.975);
+        clawOpen = false;
+        liftRotation.setTarget(3000);
+        liftExtension.setTarget(0);
     }
 
     public void sampleCollectionPos() {
@@ -407,11 +452,27 @@ public class MecanumTeleOp extends OpMode {
 
     }
 
+    public void experimentalPostSpecimenScoringPos(){
+        trig = false;
+        basket = false;
+        if(liftNotAtPosition){
+            liftExtension.setTarget(450);
+        }
+        if(liftExtension.getLiftMotor().getCurrentPosition() >= 445)
+        {
+            clawServo.setPosition(0.3);
+            clawOpen = true;
+            liftNotAtPosition = false;
+            scoreSpecimen = false;
+        }
+    }
+
     public void outputLog() {
 
     }
 
     public void initializeArm() {
+        liftExtension.setTarget(0);
         liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         liftRotation.getLiftMotor().setPower(-0.5);
