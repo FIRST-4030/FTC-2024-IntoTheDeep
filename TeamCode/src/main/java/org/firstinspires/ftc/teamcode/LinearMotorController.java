@@ -8,6 +8,8 @@ public class LinearMotorController {
     DcMotor liftMotor;
     public int target;
     public int tickLimit;
+    boolean rotOverride = false;
+
     public LinearMotorController(HardwareMap hardwareMap, String liftMotorName, int maxVal, boolean reverse, boolean reset){
         liftMotor = hardwareMap.get(DcMotor.class, liftMotorName);
         if(reset) {
@@ -35,7 +37,8 @@ public class LinearMotorController {
         }
 
     }
-    public void update(double motorControl, int controlCoefficient){
+    public void update(double motorControl, int controlCoefficient, boolean button){
+        if(rotOverride){
             target = target - (int) Math.round(motorControl * controlCoefficient);
             if (target < 1) {
                 target = 1;
@@ -43,6 +46,15 @@ public class LinearMotorController {
                 target = tickLimit;
             }
             liftMotor.setTargetPosition(target);
+        } else {
+            target = target - (int) Math.round(motorControl * controlCoefficient);
+            if (target < 1) {
+                target = 1;
+            } else if (target > tickLimit) {
+                target = tickLimit;
+            }
+            liftMotor.setTargetPosition(target);
+        }
 
     }
     public void setTarget(int targetPos, double armPos){
@@ -61,5 +73,9 @@ public class LinearMotorController {
     }
     public DcMotor getLiftMotor(){
         return liftMotor;
+    }
+
+    public void setRotOverride(boolean value){
+        rotOverride = value;
     }
 }

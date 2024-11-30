@@ -263,7 +263,7 @@ public class NewMecanumDrive {
         if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
             leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+            rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
         }
         else {
             leftFront.setDirection(DcMotorSimple.Direction.REVERSE);

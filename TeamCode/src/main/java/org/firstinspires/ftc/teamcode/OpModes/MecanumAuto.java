@@ -50,6 +50,7 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper brickPush2;
     public Pose2dWrapper pushPrep4;
     public Pose2dWrapper pushPrep5;
+    public Pose2dWrapper fifthSample;
 
 
     /**
@@ -132,6 +133,7 @@ public class MecanumAuto extends LinearOpMode {
             collectionPose3 = new Pose2dWrapper(-62.75, -23, Math.toRadians(125));
             preParkPose = new Pose2dWrapper(-42, -18, 0);
             parkPose = new Pose2dWrapper(-38, -18, 0);
+            fifthSample = new Pose2dWrapper(-56, 28, 0);
         }
 
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d());
@@ -518,18 +520,18 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(openClaw());
                 ///Cycle 2
+                Actions.runBlocking(floorPickUpPrep());
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
-                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                                .strafeToLinearHeading(fifthSample.toPose2d().position, fifthSample.heading)
                                 .build()
                 );
-                Actions.runBlocking(floorPickUpPrep());
-                sleep(1500);
+                sleep(500);
                 Actions.runBlocking(pickUp());
                 sleep(300);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
-                        drive.actionBuilder(collectionPose.toPose2d())
+                        drive.actionBuilder(fifthSample.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
@@ -538,17 +540,35 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
-                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.heading)
+                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
                 Actions.runBlocking(floorPickUpPrep());
-                sleep(1500);
+                sleep(700);
+                Actions.runBlocking(pickUp());
+                sleep(500);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(300);
+                Actions.runBlocking(floorPickUpPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
                 Actions.runBlocking(pickUp());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose2.toPose2d())
-                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
                 sleep(750);
@@ -567,7 +587,7 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
-                        drive.actionBuilder(collectionPose3.toPose2d())
+                        drive.actionBuilder(collectionPose2.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
