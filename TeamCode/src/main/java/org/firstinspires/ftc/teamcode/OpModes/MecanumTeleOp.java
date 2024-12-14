@@ -30,13 +30,13 @@ public class MecanumTeleOp extends OpMode {
     final int LIFT_EXT_COEFFICIENT = 30;
     final double STARTING_LENGTH = 14.5;
     final double SERVO_DELTA_PER_DEGREE_270 = 0.00370370370;
-    final int MINIMUM_DEGREES = 55;
+    final int MINIMUM_DEGREES = 56;
     NewMecanumDrive drive;
     InputHandler inputHandler;
     Vector3d mecanumController;
     LinearMotorController liftRotation, liftExtension;
     DcMotor leftSpoolMotor, rightSpoolMotor;
-    Servo clawServo, wrist;
+    Servo clawServo, wrist, wristRotation;
     Servo rightHangServo, leftHangServo;
     static final int    CYCLE_MS    =   50;     // period of each cycle
     static final double MAX_POS     =  0.8;     // Maximum rotational position
@@ -46,6 +46,7 @@ public class MecanumTeleOp extends OpMode {
     boolean experimental = false;
     boolean secondHang = false;
     boolean stopStrain = false;
+    boolean ran = false;
 
 
     double driveCoefficient = 1;
@@ -73,7 +74,7 @@ public class MecanumTeleOp extends OpMode {
 
     double theta;
     static final double HIGH_TARGET = 2.5;
-    static final double LOW_TARGET = 5.5;
+    static final double LOW_TARGET = 6;
     double controlledTarget = 2.5;
     double extensionInches = STARTING_LENGTH;
     double extensionTicksPerIn = 75.13;
@@ -110,6 +111,7 @@ public class MecanumTeleOp extends OpMode {
         imu = hardwareMap.get(IMU.class, "imu");
         clawServo = hardwareMap.get(Servo.class, "claw");
         wrist = hardwareMap.get(Servo.class, "wrist");
+        wristRotation = hardwareMap.get(Servo.class, "wristRotation");
         rotationTouchSensor = hardwareMap.get(TouchSensor.class, "rotationSensor");
         leftSpoolMotor = hardwareMap.get(DcMotor.class, "leftSpoolMotor");
         rightSpoolMotor = hardwareMap.get(DcMotor.class, "rightSpoolMotor");
@@ -171,21 +173,26 @@ public class MecanumTeleOp extends OpMode {
         while(startTimer.milliseconds() <= 300) {
             clawServo.setPosition(0.95);
             wrist.setPosition(1);
+            wristRotation.setPosition(0.5);
             leftHangServo.setPosition(0.55);
             rightHangServo.setPosition(0.475);
+
         }
         liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, true, false);
+                1390, true, true);
         initializeArm();
     }
 
     @Override
     public void loop() {
         if(hanging && liftRotation.getLiftMotor().getCurrentPosition() <= 1000 && hangTimer.milliseconds() > 1500){
+            if(!ran) {
+                liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                ran = true;
+            }
             if(!stopStrain) {
                 if (!rotationTouchSensor.isPressed()) {
-                    liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                     liftRotation.getLiftMotor().setPower(-1);
                 } else {
                     liftRotation.getLiftMotor().setPower(0);
@@ -196,6 +203,7 @@ public class MecanumTeleOp extends OpMode {
         } else {
             if(trig) {
                 liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
+                wristRotation.setPosition(wristRotation.getPosition()+gamepad2.left_stick_x*0.033);
                 extensionInches = (liftExtension.getLiftMotor().getCurrentPosition() / extensionTicksPerIn)
                         + STARTING_LENGTH;
                 if(driverControlled){
@@ -215,6 +223,7 @@ public class MecanumTeleOp extends OpMode {
             } else {
                 liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
                 liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT, rotationTouchSensor.isPressed());
+                wristRotation.setPosition(0.5);
             }
         }
         if(hanging && rotationTouchSensor.isPressed()){
@@ -291,6 +300,10 @@ public class MecanumTeleOp extends OpMode {
             if(controlledTarget > 2) {
                 controlledTarget -= 0.06;
             }
+        }
+
+        if(inputHandler.up("D2:B")){
+            initializeArm();
         }
 
         if(inputHandler.active("D2:DPAD_DOWN")){
@@ -380,11 +393,11 @@ public class MecanumTeleOp extends OpMode {
         }
 
         if(inputHandler.up("D1:RB")){
-            globalIMUHeading = or.thirdAngle - Math.PI/2;
+            globalIMUHeading = globalIMUHeading - Math.PI/2;
         }
 
         if(inputHandler.up("D1:LB")){
-            globalIMUHeading = or.thirdAngle + Math.PI/2;
+            globalIMUHeading = globalIMUHeading + Math.PI/2;
         }
 
         if(inputHandler.up("D2:RB")){
@@ -393,7 +406,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.up("D1:LT")){
             beginHang();
         }
-        if(inputHandler.up("D1:RT")){
+        if(inputHandler.up("D1:A")){
             if(hanging){
                 rightHangServo.setPosition(1);
                 leftHangServo.setPosition(0);
@@ -528,11 +541,13 @@ public class MecanumTeleOp extends OpMode {
 
     public void initializeArm() {
         liftExtension.setTarget(0);
+        clawServo.setPosition(0.95);
         liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         liftRotation.getLiftMotor().setPower(-0.5);
         wrist.setPosition(0.95);
-        while (true) {
+        ElapsedTime messUpTimer = new ElapsedTime();
+        while (messUpTimer.milliseconds() < 5000 && !rotationTouchSensor.isPressed()) {
             if (rotationTouchSensor.isPressed()) {
                 liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 liftRotation.getLiftMotor().setPower(1.0);
@@ -541,7 +556,33 @@ public class MecanumTeleOp extends OpMode {
                 liftRotation.getLiftMotor().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
                 break;
             }
+        }
+        liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftRotation.getLiftMotor().setPower(1.0);
+        liftRotation.setTarget(5);
+        liftRotation.getLiftMotor().setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        liftRotation.getLiftMotor().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
 
+    public void initializeExtension() {
+        liftExtension.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftExtension.getLiftMotor().setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        liftExtension.getLiftMotor().setPower(-0.1);
+        int prev = 0;
+        int current = 0;
+        int deltaTicks;
+        while(true){
+            prev = current;
+            current = liftExtension.getLiftMotor().getCurrentPosition();
+            deltaTicks = Math.abs(current - prev);
+            if(deltaTicks <= 20){
+                liftExtension.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                liftExtension.getLiftMotor().setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftExtension.getLiftMotor().setPower(1.0);
+                liftExtension.setTarget(5);
+                liftExtension.getLiftMotor().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                break;
+            }
         }
     }
 
