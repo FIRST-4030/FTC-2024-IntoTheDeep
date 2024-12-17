@@ -113,11 +113,11 @@ public class MecanumAuto extends LinearOpMode {
                     depositPose = new Pose2dWrapper(1.8, -28.5, 4.7123);
                     pushPrep1 = new Pose2dWrapper(40.8, -26.75, 4.7123);
                     pushPrep2 = new Pose2dWrapper(40.8, -20, 4.7123);
-                    pushPrep3 = new Pose2dWrapper(56, -15, 4.7123);
-                    brickPush = new Pose2dWrapper(54.8, -38.75, 4.7123);
+                    pushPrep3 = new Pose2dWrapper(59, -15, 4.7123);
+                    brickPush = new Pose2dWrapper(59, -38.75, 4.7123);
                     pushPrep4 = new Pose2dWrapper(54.8, -12.5, 4.7123);
-                    pushPrep5 = new Pose2dWrapper(63.5, -8.5, 4.7123);
-                    brickPush2 = new Pose2dWrapper(63.5, -44, 4.7123);
+                    pushPrep5 = new Pose2dWrapper(58, -8.5, 4.7123);
+                    brickPush2 = new Pose2dWrapper(66.5, -44, 4.7123);
                     collectionPose = new Pose2dWrapper(44.5, -46.5, 4.7123);
                     intermediaryPose = new Pose2dWrapper(15.8, -31.75, 4.7123);
                     depositPose2 = new Pose2dWrapper(5.8, -28.5, 4.7123);
@@ -164,8 +164,7 @@ public class MecanumAuto extends LinearOpMode {
                 Actions.runBlocking(openClaw());
                 sleep(250);
                 ///Cycle 2
-                Actions.runBlocking(stow());
-
+                Actions.runBlocking(experimentalCollectionPrep());
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 //.splineToConstantHeading(intermediaryPose.toPose2d().position, intermediaryPose.toPose2d().heading)
@@ -224,12 +223,13 @@ public class MecanumAuto extends LinearOpMode {
                                 .strafeTo(brickPush2.toPose2d().position)
                                 .build()
                 );*/
-                Actions.runBlocking(experimentalCollectionPrep());
-                Actions.runBlocking(
+                /*Actions.runBlocking(
                         drive.actionBuilder(brickPush2.toPose2d())
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
+
+                 */
                 Actions.runBlocking(experimentalExtend());
                 sleep(150);
                 Actions.runBlocking(collect());
@@ -237,7 +237,7 @@ public class MecanumAuto extends LinearOpMode {
                 Actions.runBlocking(experimentalPreScore());
                 sleep(100);
                 Actions.runBlocking(
-                        drive.actionBuilder(collectionPose.toPose2d())
+                        drive.actionBuilder(brickPush2.toPose2d())
                                 .strafeTo(depositPose2.toPose2d().position)
                                 .build()
                 );
