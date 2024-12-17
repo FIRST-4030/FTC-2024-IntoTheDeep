@@ -27,7 +27,7 @@ public class MecanumAuto extends LinearOpMode {
     InputHandler inputHandler;
     LinearMotorController liftRotation;
     LinearMotorController liftExtension;
-    Servo clawServo, wrist;
+    Servo clawServo, wrist, wristRotation;
     ElapsedTime runtime = new ElapsedTime();
     boolean inputComplete = false;
     boolean side = true;
@@ -50,6 +50,7 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper brickPush2;
     public Pose2dWrapper pushPrep4;
     public Pose2dWrapper pushPrep5;
+    public Pose2dWrapper fifthSample;
 
 
     /**
@@ -67,8 +68,10 @@ public class MecanumAuto extends LinearOpMode {
                 3000, false,true);
         wrist = hardwareMap.get(Servo.class, "wrist");
         clawServo = hardwareMap.get(Servo.class, "claw");
+        wristRotation = hardwareMap.get(Servo.class, "wristRotation");
         inputHandler = InputAutoMapper.normal.autoMap(this);
         clawServo.setPosition(0.95);
+        wristRotation.setPosition(0.5);
 
         while (!inputComplete) {
             inputHandler.loop();
@@ -108,13 +111,13 @@ public class MecanumAuto extends LinearOpMode {
                 if(experimental){
                     startPose = new Pose2dWrapper(15.8, -55.75, 4.7123);
                     depositPose = new Pose2dWrapper(1.8, -28.5, 4.7123);
-                    pushPrep1 = new Pose2dWrapper(40.8, -29.75, 4.7123);
-                    pushPrep2 = new Pose2dWrapper(39.8, -12, 4.7123);
-                    pushPrep3 = new Pose2dWrapper(56, -7.75, 4.7123);
-                    brickPush = new Pose2dWrapper(54.8, -41.75, 4.7123);
-                    pushPrep4 = new Pose2dWrapper(54.8, -10.5, 4.7123);
-                    pushPrep5 = new Pose2dWrapper(59.5, -10.5, 4.7123);
-                    brickPush2 = new Pose2dWrapper(59.5, -49, 4.7123);
+                    pushPrep1 = new Pose2dWrapper(40.8, -26.75, 4.7123);
+                    pushPrep2 = new Pose2dWrapper(40.8, -20, 4.7123);
+                    pushPrep3 = new Pose2dWrapper(56, -15, 4.7123);
+                    brickPush = new Pose2dWrapper(54.8, -38.75, 4.7123);
+                    pushPrep4 = new Pose2dWrapper(54.8, -12.5, 4.7123);
+                    pushPrep5 = new Pose2dWrapper(63.5, -8.5, 4.7123);
+                    brickPush2 = new Pose2dWrapper(63.5, -44, 4.7123);
                     collectionPose = new Pose2dWrapper(44.5, -46.5, 4.7123);
                     intermediaryPose = new Pose2dWrapper(15.8, -31.75, 4.7123);
                     depositPose2 = new Pose2dWrapper(5.8, -28.5, 4.7123);
@@ -132,6 +135,7 @@ public class MecanumAuto extends LinearOpMode {
             collectionPose3 = new Pose2dWrapper(-62.75, -23, Math.toRadians(125));
             preParkPose = new Pose2dWrapper(-42, -18, 0);
             parkPose = new Pose2dWrapper(-38, -18, 0);
+            fifthSample = new Pose2dWrapper(-56, 28, 0);
         }
 
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d());
@@ -158,7 +162,7 @@ public class MecanumAuto extends LinearOpMode {
                 Actions.runBlocking(extendScore());
                 sleep(400);
                 Actions.runBlocking(openClaw());
-                sleep(300);
+                sleep(250);
                 ///Cycle 2
                 Actions.runBlocking(stow());
 
@@ -167,11 +171,15 @@ public class MecanumAuto extends LinearOpMode {
                                 //.splineToConstantHeading(intermediaryPose.toPose2d().position, intermediaryPose.toPose2d().heading)
                                 .setTangent(0)
                                 .splineToConstantHeading(pushPrep1.toPose2d().position, 1.5708)
-                                .splineToConstantHeading(pushPrep2.toPose2d().position, 3.1415)
-                                .splineToConstantHeading(pushPrep3.toPose2d().position, 3.1415)
+                                .splineToConstantHeading(pushPrep2.toPose2d().position, 1.5708)
+                                .splineToConstantHeading(pushPrep3.toPose2d().position, 4.7123)
                                 .splineToConstantHeading(brickPush.toPose2d().position, brickPush.toPose2d().heading)
+                                .splineToConstantHeading(pushPrep4.toPose2d().position, 1.5708)
+                                .splineToConstantHeading(pushPrep5.toPose2d().position, 4.7123)
+                                .splineToConstantHeading(brickPush2.toPose2d().position, brickPush2.toPose2d().heading)
                                 .build()
                 );
+                /*
                 Actions.runBlocking(
                         drive.actionBuilder(brickPush.toPose2d())
                                 .setTangent(1.5708)
@@ -180,6 +188,7 @@ public class MecanumAuto extends LinearOpMode {
                                 .splineToConstantHeading(brickPush2.toPose2d().position, brickPush2.toPose2d().heading)
                                 .build()
                 );
+                */
                 /*Actions.runBlocking(
                         drive.actionBuilder(intermediaryPose.toPose2d())
                                 .strafeTo(pushPrep1.toPose2d().position)
@@ -221,9 +230,8 @@ public class MecanumAuto extends LinearOpMode {
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(200);
+                sleep(150);
                 Actions.runBlocking(collect());
                 sleep(300);
                 Actions.runBlocking(experimentalPreScore());
@@ -246,9 +254,8 @@ public class MecanumAuto extends LinearOpMode {
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(200);
+                sleep(150);
                 Actions.runBlocking(collect());
                 sleep(300);
                 Actions.runBlocking(experimentalPreScore());
@@ -268,9 +275,8 @@ public class MecanumAuto extends LinearOpMode {
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                sleep(200);
                 Actions.runBlocking(experimentalExtend());
-                sleep(200);
+                sleep(150);
                 Actions.runBlocking(collect());
                 sleep(300);
                 Actions.runBlocking(experimentalPreScore());
@@ -518,18 +524,18 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(openClaw());
                 ///Cycle 2
+                Actions.runBlocking(floorPickUpPrep());
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
-                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
+                                .strafeToLinearHeading(fifthSample.toPose2d().position, fifthSample.heading)
                                 .build()
                 );
-                Actions.runBlocking(floorPickUpPrep());
-                sleep(1500);
+                sleep(500);
                 Actions.runBlocking(pickUp());
                 sleep(300);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
-                        drive.actionBuilder(collectionPose.toPose2d())
+                        drive.actionBuilder(fifthSample.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
@@ -538,17 +544,35 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
-                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.heading)
+                                .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
                 Actions.runBlocking(floorPickUpPrep());
-                sleep(1500);
+                sleep(700);
+                Actions.runBlocking(pickUp());
+                sleep(500);
+                Actions.runBlocking(highBucketPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(collectionPose.toPose2d())
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .build()
+                );
+                sleep(750);
+                Actions.runBlocking(openClaw());
+                sleep(300);
+                Actions.runBlocking(floorPickUpPrep());
+                Actions.runBlocking(
+                        drive.actionBuilder(depositPose.toPose2d())
+                                .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.toPose2d().heading)
+                                .build()
+                );
+                sleep(750);
                 Actions.runBlocking(pickUp());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose2.toPose2d())
-                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
+                                .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
                 sleep(750);
@@ -567,7 +591,7 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
                 Actions.runBlocking(
-                        drive.actionBuilder(collectionPose3.toPose2d())
+                        drive.actionBuilder(collectionPose2.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
@@ -601,7 +625,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 liftRotation.setTarget(2000);
-                liftExtension.setTarget(150);
+                liftExtension.setTarget(120);
                 wrist.setPosition(0.4);
                 clawServo.setPosition(0.95);
                 return liftRotation.getLiftMotor().getCurrentPosition() > 1960;
@@ -618,7 +642,7 @@ public class MecanumAuto extends LinearOpMode {
                 ElapsedTime timer = new ElapsedTime();
                 wrist.setPosition(0.91);
                 clawServo.setPosition(0.975);
-                liftRotation.setTarget(3000);
+                liftRotation.setTarget(2955);
                 liftExtension.setTarget(0);
                 return liftRotation.getLiftMotor().getCurrentPosition() > 2960;
             }
@@ -716,7 +740,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftRotation.setTarget(825);
+                liftRotation.setTarget(815);
                 liftExtension.setTarget(0);
                 clawServo.setPosition(0.3);
                 wrist.setPosition(0.5);
@@ -737,7 +761,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftExtension.setTarget(450);
+                liftExtension.setTarget(460);
                 return timer.milliseconds() >= 200;
             }
         };
@@ -749,7 +773,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftExtension.setTarget(375);
+                liftExtension.setTarget(405);
                 return timer.milliseconds() >= 200;
             }
         };
@@ -797,7 +821,7 @@ public class MecanumAuto extends LinearOpMode {
                 ElapsedTime timer = new ElapsedTime();
                 wrist.setPosition(0.775);
                 clawServo.setPosition(0.95);
-                liftRotation.setTarget(3000);
+                liftRotation.setTarget(2970);
                 liftExtension.setTarget(1390);
                 return timer.milliseconds() > 1200;
             }
@@ -816,7 +840,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftRotation.setTarget(500);
+                liftRotation.setTarget(470);
                 liftExtension.setTarget(530);
                 wrist.setPosition(0.15);
                 return timer.milliseconds() > 500;
@@ -831,7 +855,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftRotation.setTarget(850);
+                liftRotation.setTarget(820);
                 liftExtension.setTarget(450);
                 wrist.setPosition(0.15);
                 return timer.milliseconds() > 500;
@@ -846,7 +870,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftRotation.setTarget(500);
+                liftRotation.setTarget(470);
                 return timer.milliseconds() > 500;
             }
 
@@ -879,7 +903,7 @@ public class MecanumAuto extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
                 clawServo.setPosition(0.95);
-                liftRotation.setTarget(500);
+                liftRotation.setTarget(470);
                 return timer.milliseconds() > 500;
             }
         };
@@ -896,7 +920,7 @@ public class MecanumAuto extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 ElapsedTime timer = new ElapsedTime();
-                liftRotation.setTarget(1625);
+                liftRotation.setTarget(1595);
                 liftExtension.setTarget(0);
                 wrist.setPosition(0.45);
                 return timer.milliseconds() >= 700;
