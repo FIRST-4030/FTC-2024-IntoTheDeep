@@ -65,6 +65,9 @@ import java.util.List;
 
 @Config
 public class NewMecanumDrive {
+    private final LogFile filePtr;
+    private final boolean writeIt;
+
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
@@ -229,8 +232,10 @@ public class NewMecanumDrive {
         }
     }
 
-    public NewMecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
+    public NewMecanumDrive(HardwareMap hardwareMap, Pose2d pose, LogFile filePtr, boolean writeIt ) {
         this.pose = pose;
+        this.filePtr = filePtr;
+        this.writeIt = writeIt;
 
         networkName = controlHub.getNetworkName();
 
@@ -455,6 +460,8 @@ public class NewMecanumDrive {
             c.setStroke("#4CAF50FF");
             c.setStrokeWidth(1);
             c.strokePolyline(xPoints, yPoints);
+
+            if (writeIt) { filePtr.logDetails(robotVelRobot, error); }
 
             return true;
         }

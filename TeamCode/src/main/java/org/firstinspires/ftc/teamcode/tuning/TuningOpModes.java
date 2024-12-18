@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
+import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.TankDrive;
 import org.firstinspires.ftc.teamcode.ThreeDeadWheelLocalizer;
@@ -32,6 +33,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class TuningOpModes {
+    public static boolean logDetails = false;
+
+    static LogFile detailsLog;
+
     // TODO: change this to TankDrive.class if you're using tank
     public static final Class<?> DRIVE_CLASS = NewMecanumDrive.class;
 
@@ -55,7 +60,7 @@ public final class TuningOpModes {
         DriveViewFactory dvf;
         if (DRIVE_CLASS.equals(NewMecanumDrive.class)) {
             dvf = hardwareMap -> {
-                NewMecanumDrive md = new NewMecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+                NewMecanumDrive md = new NewMecanumDrive(hardwareMap, new Pose2d(0, 0, 0), detailsLog, logDetails);
 
                 List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
                 List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();

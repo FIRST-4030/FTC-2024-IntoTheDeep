@@ -16,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.LinearMotorController;
+import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
@@ -103,7 +104,8 @@ public class MecanumTeleOp extends OpMode {
 
 
     DcMotor paralellEncoder;
-
+    public static boolean logDetails = false;
+    LogFile detailsLog;
 
     @Override
     public void init() {
@@ -138,7 +140,7 @@ public class MecanumTeleOp extends OpMode {
         globalIMUHeading = or.thirdAngle;
 
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
-        drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0));
+        drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
         //TODO: Update reset on liftExtension for competition day
         liftRotation = new LinearMotorController(hardwareMap, "swing",
                 3000, false, true);

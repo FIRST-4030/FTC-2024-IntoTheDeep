@@ -5,15 +5,20 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.TankDrive;
 
 public final class SplineTest extends LinearOpMode {
+    public static boolean logDetails = false;
+
+    LogFile detailsLog;
+
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d beginPose = new Pose2d(0, 0, 0);
         if (TuningOpModes.DRIVE_CLASS.equals(NewMecanumDrive.class)) {
-            NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, beginPose);
+            NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, beginPose, detailsLog, logDetails);
 
             waitForStart();
 

@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import org.firstinspires.ftc.teamcode.BuildConfig;
+import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.Pose2dWrapper;
 
@@ -18,6 +19,9 @@ import java.util.Timer;
 
 @Autonomous
 public class MecanumAutoAlt extends LinearOpMode {
+    public static boolean logDetails = false;
+
+    LogFile detailsLog;
     NewMecanumDrive drive;
     IMU imu;
     @Override
@@ -33,7 +37,7 @@ public class MecanumAutoAlt extends LinearOpMode {
         Pose2dWrapper PushPose2 = new Pose2dWrapper(57, -52, Math.toRadians(90));
         Pose2dWrapper LineUpPushPoseX3 = new Pose2dWrapper(63 , -6, Math.toRadians(90));
         Pose2dWrapper PushPose3 = new Pose2dWrapper(61, -52, Math.toRadians(90));
-        drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d());
+        drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog, logDetails);
         imu = hardwareMap.get(IMU.class, "imu");
 
 
