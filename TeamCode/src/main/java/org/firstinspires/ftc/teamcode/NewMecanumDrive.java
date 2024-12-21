@@ -637,7 +637,7 @@ public class NewMecanumDrive {
 
         } else {
             PARAMS.inPerTick = 0.000566864859;
-            PARAMS.lateralInPerTick = 0.00046837048125481455;
+            PARAMS.lateralInPerTick = 0.0003896547740605162;
             PARAMS.trackWidthTicks = 22580.573725252547;
 
             PARAMS.kS = 0.8162221711868276;

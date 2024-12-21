@@ -52,9 +52,9 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper pushPrep4;
     public Pose2dWrapper pushPrep5;
     public Pose2dWrapper fifthSample;
-    public static boolean logSampleSide = false;
+    public static boolean logSampleSide = true;
     public static boolean logSpecimenSide = false;
-    public static boolean logDetails = false;
+    public static boolean logDetails = true;
 
     LogFile sampleSideLog;
     LogFile specimenSideLog;
