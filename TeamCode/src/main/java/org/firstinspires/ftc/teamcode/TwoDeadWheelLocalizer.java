@@ -129,12 +129,12 @@ public final class TwoDeadWheelLocalizer implements Localizer {
 
         return twist;
     }
-
+    //6.0, 3.7
     private void setParams() {
 
         if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
-            PARAMS.parYTicks = -13951; // y position of the parallel encoder (in tick units)
-            PARAMS.perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
+            PARAMS.parYTicks = 8720; //PARAMS.parYTicks = -13951; // y position of the parallel encoder (in tick units)
+            PARAMS.perpXTicks = -5400; //PARAMS.perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
         } else {
             PARAMS.parYTicks = 1; // y position of the parallel encoder (in tick units)
             PARAMS.perpXTicks = 1; // x position of the perpendicular encoder (in tick units)

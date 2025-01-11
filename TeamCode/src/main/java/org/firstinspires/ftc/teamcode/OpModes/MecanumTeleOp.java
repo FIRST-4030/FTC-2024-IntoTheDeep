@@ -28,7 +28,7 @@ public class MecanumTeleOp extends OpMode {
 
     //0.00370370 = 1 degree on a 270 servo
     final int LIFT_ROT_COEFFICIENT = 39;
-    final int LIFT_EXT_COEFFICIENT = 30;
+    final int LIFT_EXT_COEFFICIENT = 40;
     final double STARTING_LENGTH = 14.5;
     final double SERVO_DELTA_PER_DEGREE_270 = 0.00370370370;
     final int MINIMUM_DEGREES = 56;
@@ -48,6 +48,7 @@ public class MecanumTeleOp extends OpMode {
     boolean secondHang = false;
     boolean stopStrain = false;
     boolean ran = false;
+    boolean resetRot = false;
 
 
     double driveCoefficient = 1;
@@ -58,6 +59,7 @@ public class MecanumTeleOp extends OpMode {
     ElapsedTime headingTimer = new ElapsedTime();
     ElapsedTime clawTimer;
     ElapsedTime hangTimer = new ElapsedTime();
+    ElapsedTime scoreTimer = new ElapsedTime();
     double deltaTime;
     double previousTime;
     boolean liftNotAtPosition = true;
@@ -74,7 +76,7 @@ public class MecanumTeleOp extends OpMode {
     //TRIG BELOW:
 
     double theta;
-    static final double HIGH_TARGET = 2.5;
+    static final double HIGH_TARGET = 2;
     static final double LOW_TARGET = 6;
     double controlledTarget = 2.5;
     double extensionInches = STARTING_LENGTH;
@@ -143,7 +145,7 @@ public class MecanumTeleOp extends OpMode {
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
         //TODO: Update reset on liftExtension for competition day
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                3000, false, true);
+                3000, false, false);
 
 
         clawTimer = new ElapsedTime();
@@ -175,14 +177,14 @@ public class MecanumTeleOp extends OpMode {
         while(startTimer.milliseconds() <= 300) {
             clawServo.setPosition(0.95);
             wrist.setPosition(1);
-            wristRotation.setPosition(0.5);
+            wristRotation.setPosition(0.44);
             leftHangServo.setPosition(0.55);
             rightHangServo.setPosition(0.475);
 
         }
         liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, true, true);
-        initializeArm();
+                1390, true, false);
+        //initializeArm();
     }
 
     @Override
@@ -216,8 +218,9 @@ public class MecanumTeleOp extends OpMode {
                     theta = 180/Math.PI * (Math.acos(LOW_TARGET / extensionInches));
                 }
                 telemetry.addData("Trig Theta Angle: ", theta);
+                telemetry.addData("Trig Wrist Pos: ", wrist.getPosition());
                 liftRotation.setTarget((int) (((theta * rotationTicksPerDegree) - (MINIMUM_DEGREES * rotationTicksPerDegree))));
-                wrist.setPosition(0.5 - theta * SERVO_DELTA_PER_DEGREE_270);
+                wrist.setPosition(0.45 - theta * SERVO_DELTA_PER_DEGREE_270);
 
                 //liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
                 //liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
@@ -225,7 +228,7 @@ public class MecanumTeleOp extends OpMode {
             } else {
                 liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
                 liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT, rotationTouchSensor.isPressed());
-                wristRotation.setPosition(0.5);
+                wristRotation.setPosition(0.44);
             }
         }
         if(hanging && rotationTouchSensor.isPressed()){
@@ -243,6 +246,8 @@ public class MecanumTeleOp extends OpMode {
 
 
         // Display the current value
+
+        telemetry.addData("Wrist pos: ", wristRotation.getPosition());
         telemetry.addData("Yaw: ", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
         telemetry.addData("Pitch: ", imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS));
         telemetry.addData("Roll: ", imu.getRobotYawPitchRollAngles().getRoll(AngleUnit.RADIANS));
@@ -339,6 +344,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.up("D2:Y")){
             scoreSpecimen = true;
             liftNotAtPosition = true;
+            scoreTimer.reset();
         }
 
         if(inputHandler.up("D2:LB")){
@@ -359,7 +365,13 @@ public class MecanumTeleOp extends OpMode {
             if(!experimental) {
                 postSpecimenScoringPos();
             } else {
-                postSpecimenScoringPos();
+                experimentalPostSpecimenScoringPos();
+            }
+            if(scoreTimer.milliseconds() > 300){
+                clawServo.setPosition(0.3);
+                clawOpen = true;
+                liftNotAtPosition = false;
+                scoreSpecimen = false;
             }
         }
 
@@ -371,10 +383,10 @@ public class MecanumTeleOp extends OpMode {
         }
         if(inputHandler.up("D2:X")){
             if(!clawOpen){
-                clawServo.setPosition(0.3);
+                clawServo.setPosition(0.2);
                 clawOpen = !clawOpen;
             } else {
-                clawServo.setPosition(0.95);
+                clawServo.setPosition(1);
                 clawOpen = !clawOpen;
             }
         }
@@ -390,7 +402,7 @@ public class MecanumTeleOp extends OpMode {
             if(!experimental) {
                 preSpecimenScoringPos();
             } else {
-                preSpecimenScoringPos();
+                experimentalPreSpecimenScoringPos();
             }
         }
 
@@ -415,11 +427,6 @@ public class MecanumTeleOp extends OpMode {
                 secondHang = true;
             }
         }
-
-
-
-
-
     }
 
     public void beginHang(){
@@ -449,7 +456,7 @@ public class MecanumTeleOp extends OpMode {
     public void specimenCollectionPos(){
         trig = false;
         basket = false;
-        liftRotation.setTarget(886);
+        liftRotation.setTarget(826);
         liftExtension.setTarget(200);
         clawServo.setPosition(0.95);
         clawOpen = false;
@@ -480,7 +487,7 @@ public class MecanumTeleOp extends OpMode {
     public void preSpecimenScoringPos(){
         trig = false;
         basket = false;
-        liftRotation.setTarget(2000);
+        liftRotation.setTarget(1970);
         liftExtension.setTarget(150);
         wrist.setPosition(0.4);
         clawServo.setPosition(0.95);
@@ -492,8 +499,7 @@ public class MecanumTeleOp extends OpMode {
         basket = false;
         wrist.setPosition(0.91);
         clawServo.setPosition(0.975);
-        clawOpen = false;
-        liftRotation.setTarget(3000);
+        liftRotation.setTarget(2955);
         liftExtension.setTarget(0);
     }
 
@@ -502,7 +508,7 @@ public class MecanumTeleOp extends OpMode {
         basket = false;
         highTarget = true;
         lowTarget = false;
-        liftRotation.setTarget(667);
+        liftRotation.setTarget(637);
         liftExtension.setTarget(5);
         wrist.setPosition(0.15);
         clawServo.setPosition(0.3);
@@ -511,9 +517,9 @@ public class MecanumTeleOp extends OpMode {
         trig = false;
         basket = false;
         if(liftNotAtPosition){
-        liftRotation.setTarget(1332);
+        liftRotation.setTarget(1300);
         }
-        if(liftRotation.getLiftMotor().getCurrentPosition() <= 1350)
+        if(liftRotation.getLiftMotor().getCurrentPosition() <= 1325)
         {
             clawServo.setPosition(0.3);
             liftNotAtPosition = false;
@@ -527,13 +533,6 @@ public class MecanumTeleOp extends OpMode {
         basket = false;
         if(liftNotAtPosition){
             liftExtension.setTarget(450);
-        }
-        if(liftExtension.getLiftMotor().getCurrentPosition() >= 445)
-        {
-            clawServo.setPosition(0.3);
-            clawOpen = true;
-            liftNotAtPosition = false;
-            scoreSpecimen = false;
         }
     }
 
@@ -549,7 +548,7 @@ public class MecanumTeleOp extends OpMode {
         liftRotation.getLiftMotor().setPower(-0.5);
         wrist.setPosition(0.95);
         ElapsedTime messUpTimer = new ElapsedTime();
-        while (messUpTimer.milliseconds() < 5000 && !rotationTouchSensor.isPressed()) {
+        while (messUpTimer.milliseconds() < 2500 && !rotationTouchSensor.isPressed()) {
             if (rotationTouchSensor.isPressed()) {
                 liftRotation.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 liftRotation.getLiftMotor().setPower(1.0);
@@ -573,11 +572,14 @@ public class MecanumTeleOp extends OpMode {
         int prev = 0;
         int current = 0;
         int deltaTicks;
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
         while(true){
             prev = current;
             current = liftExtension.getLiftMotor().getCurrentPosition();
             deltaTicks = Math.abs(current - prev);
-            if(deltaTicks <= 20){
+            if(timer.milliseconds() > 100);
+            if(deltaTicks <= 5){
                 liftExtension.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 liftExtension.getLiftMotor().setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 liftExtension.getLiftMotor().setPower(1.0);
