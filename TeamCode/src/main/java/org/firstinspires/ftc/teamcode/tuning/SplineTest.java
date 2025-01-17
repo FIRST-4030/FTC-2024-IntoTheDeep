@@ -16,6 +16,9 @@ public final class SplineTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv" ); }
+
         Pose2d beginPose = new Pose2d(0, 0, 0);
         if (TuningOpModes.DRIVE_CLASS.equals(NewMecanumDrive.class)) {
             NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, beginPose, detailsLog, logDetails);

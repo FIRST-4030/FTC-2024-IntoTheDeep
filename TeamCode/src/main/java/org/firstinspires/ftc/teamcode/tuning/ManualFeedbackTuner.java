@@ -18,6 +18,9 @@ public final class ManualFeedbackTuner extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv" ); }
+
         if (TuningOpModes.DRIVE_CLASS.equals(NewMecanumDrive.class)) {
             NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, new Pose2d(0, 0, 0), detailsLog, logDetails);
 
@@ -59,7 +62,6 @@ public final class ManualFeedbackTuner extends LinearOpMode {
                             .lineToX(DISTANCE)
                             .lineToX(0)
                             .build());
-
             }
         } else {
             throw new RuntimeException();

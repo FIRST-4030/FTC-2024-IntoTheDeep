@@ -27,8 +27,10 @@ import org.firstinspires.ftc.teamcode.messages.TwoDeadWheelInputsMessage;
 @Config
 public final class TwoDeadWheelLocalizer implements Localizer {
     public static class Params {
-        public double parYTicks;
-        public double perpXTicks;
+        public int parYTicks;
+        public int perpXTicks;
+        public double parallelDistance = 6.25;
+        public double perpDistance = 3.1;
     }
 
     public static Params PARAMS = new Params();
@@ -133,11 +135,15 @@ public final class TwoDeadWheelLocalizer implements Localizer {
     private void setParams() {
 
         if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
-            PARAMS.parYTicks = 10900; //PARAMS.parYTicks = -13951; // y position of the parallel encoder (in tick units)
+            PARAMS.parYTicks = 10900;  // y position of the parallel encoder (in tick units)
             PARAMS.perpXTicks = -5400; //PARAMS.perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
+//            PARAMS.parYTicks = parallelDistance / NewMecanumDrive.PARAMS.inPerTick;      // y position of the parallel encoder (in tick units)
+//            PARAMS.perpXTicks = -perpDistance / NewMecanumDrive.PARAMS.lateralInPerTick; // x position of the perpendicular encoder (in tick units)
         } else {
-            PARAMS.parYTicks = 1; // y position of the parallel encoder (in tick units)
-            PARAMS.perpXTicks = 1; // x position of the perpendicular encoder (in tick units)
+//            PARAMS.parYTicks = 1100;  // y position of the parallel encoder (in tick units)
+            PARAMS.perpXTicks = -5400; //PARAMS.perpXTicks = -6428; // x position of the perpendicular encoder (in tick units)
+            PARAMS.parYTicks = (int)(PARAMS.parallelDistance / NewMecanumDrive.PARAMS.inPerTick);      // y position of the parallel encoder (in tick units)
+            //PARAMS.perpXTicks = (int)(-PARAMS.perpDistance / NewMecanumDrive.PARAMS.lateralInPerTick); // x position of the perpendicular encoder (in tick units)
         }
     }
 }

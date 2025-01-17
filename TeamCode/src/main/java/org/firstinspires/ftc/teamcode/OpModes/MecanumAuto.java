@@ -71,14 +71,11 @@ public class MecanumAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        if (logSampleSide) { sampleSideLog = new LogFile("sample", "csv" ); }
-        if (logSampleSide) { sampleSideLog.logSampleTitles(); }
+        if (logSampleSide) { sampleSideLog = new LogFile(LogFile.FileType.Action, "sample", "csv" ); }
 
-        if (logSpecimenSide) { specimenSideLog = new LogFile("specimen", "csv" ); }
-        if (logSpecimenSide) { specimenSideLog.logSampleTitles(); }
+        if (logSpecimenSide) { specimenSideLog = new LogFile(LogFile.FileType.Action, "specimen", "csv" ); }
 
-        if (logDetails) { detailsLog = new LogFile("details", "csv" ); }
-        if (logDetails) { detailsLog.logDetailsTitles(); }
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details, "details", "csv" ); }
 
         runtime.reset();
         liftExtension = new LinearMotorController(hardwareMap, "slide",
@@ -176,21 +173,21 @@ public class MecanumAuto extends LinearOpMode {
         if(!side) {
             if(!experimental){
                 ///Cycle 1
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Cycle 1", startPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( startPose.toPose2d(), "Cycle 1" ); }
                 Actions.runBlocking(experimentalPreScore());
                 Actions.runBlocking(
                         drive.actionBuilder(startPose.toPose2d())
                                 .strafeTo(depositPose.toPose2d().position)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose.toPose2d() ); }
                 Actions.runBlocking(extendScore());
                 sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(250);
                 ///Cycle 2
                 Actions.runBlocking(experimentalCollectionPrep());
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Cycle 2", depositPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose.toPose2d(), "Cycle 2" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 //.splineToConstantHeading(intermediaryPose.toPose2d().position, intermediaryPose.toPose2d().heading)
@@ -204,7 +201,7 @@ public class MecanumAuto extends LinearOpMode {
                                 .splineToConstantHeading(brickPush2.toPose2d().position, brickPush2.toPose2d().heading)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", brickPush2.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( brickPush2.toPose2d() ); }
                 sleep(350);
                 Actions.runBlocking(experimentalExperimentalExtend());
                 sleep(600);
@@ -212,13 +209,13 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(350);
                 Actions.runBlocking(experimentalPreScore());
                 sleep(100);
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Deposit 2", brickPush2.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( brickPush2.toPose2d(), "Deposit 2" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(brickPush2.toPose2d())
                                 .strafeTo(depositPose2.toPose2d().position)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", depositPose2.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose2.toPose2d(), "" ); }
                 Actions.runBlocking(
                         extendScore()
                 );
@@ -227,63 +224,63 @@ public class MecanumAuto extends LinearOpMode {
                 sleep(250);
                 Actions.runBlocking(experimentalCollectionPrep());
                 ///Cycle 3
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Cycle 3", depositPose2.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose2.toPose2d(), "Cycle 3" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose2.toPose2d())
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "", collectionPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( collectionPose.toPose2d() ); }
                 Actions.runBlocking(experimentalExtend());
                 sleep(275);
                 Actions.runBlocking(collect());
                 sleep(300);
                 Actions.runBlocking(experimentalPreScore());
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Deposit 3", collectionPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( collectionPose.toPose2d(), "Deposit 3" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeTo(depositPose3.toPose2d().position)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", depositPose3.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose3.toPose2d() ); }
                 Actions.runBlocking(extendScore());
                 sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(250);
                 ///Cycle 4
                 Actions.runBlocking(experimentalCollectionPrep());
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Cycle 4", depositPose3.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose3.toPose2d(), "Cycle 4" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose3.toPose2d())
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", collectionPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( collectionPose.toPose2d() ); }
                 Actions.runBlocking(experimentalExtend());
                 sleep(275);
                 Actions.runBlocking(collect());
                 sleep(300);
                 Actions.runBlocking(experimentalPreScore());
                 sleep(100);
-                if (logSpecimenSide) { specimenSideLog.logSample( true, "Deposit 4", collectionPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( collectionPose.toPose2d(), "Deposit 4" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeTo(depositPose4.toPose2d().position)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", depositPose4.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( depositPose4.toPose2d() ); }
                 Actions.runBlocking(extendScore());
                 sleep(400);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 Actions.runBlocking(stow());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Park", depositPose4.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose4.toPose2d(), "Park" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose4.toPose2d())
                                 .strafeTo(parkPose.toPose2d().position)
                                 .build()
                 );
-                if (logSpecimenSide) { specimenSideLog.logSample( false, "", parkPose.toPose2d() ); }
+                if (logSpecimenSide) { specimenSideLog.logAction( parkPose.toPose2d() ); }
             } else {
                 detailsLog.log("1, Minimizing Error");
                 Actions.runBlocking(
@@ -298,220 +295,220 @@ public class MecanumAuto extends LinearOpMode {
             if (experimental) {
                 ///Cycle 1
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Cycle 1", startPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( startPose.toPose2d(), "Cycle 1" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(startPose.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(500);
                 Actions.runBlocking(openClaw());
                 ///Cycle 2
-                if (logSampleSide) { sampleSideLog.logSample( true, "Cycle 2", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Cycle 2" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose.toPose2d() ); }
                 Actions.runBlocking(floorPickUpPrep());
                 sleep(1500);
                 Actions.runBlocking(pickUp());
                 sleep(300);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(500);
-                if (logSampleSide) { sampleSideLog.logSample( true, "Collection 2", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Collection 2" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose2.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose2.toPose2d() ); }
                 Actions.runBlocking(floorPickUpPrep());
                 sleep(1500);
                 Actions.runBlocking(pickUp());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose2.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose2.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose2.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 Actions.runBlocking(lastFloorPickUpPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Collection 3", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Collection 3" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose3.toPose2d().position, collectionPose3.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose3.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose3.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(lastFloorPickUp1());
                 sleep(550);
                 Actions.runBlocking(lastFloorPickUp2());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose3.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose3.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose3.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(500);
                 Actions.runBlocking(armParkPose());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Pre-Park", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Pre-Park" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(preParkPose.toPose2d().position, preParkPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", preParkPose.toPose2d() ); }
-                if (logSampleSide) { sampleSideLog.logSample( true, "Park", preParkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( preParkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( preParkPose.toPose2d(), "Park" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(preParkPose.toPose2d())
                                 .strafeToLinearHeading(parkPose.toPose2d().position, preParkPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", parkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( parkPose.toPose2d() ); }
                 sleep(1500);
             } else {
                 /// Auto code for when scoring Samples
 
                 ///Cycle 1
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Cycle 1", startPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( startPose.toPose2d(), "Cycle 1" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(startPose.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(500);
                 Actions.runBlocking(openClaw());
                 ///Cycle 2
                 Actions.runBlocking(floorPickUpPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Sample 5", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Sample 5" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(fifthSample.toPose2d().position, fifthSample.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", fifthSample.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( fifthSample.toPose2d() ); }
                 sleep(500);
                 Actions.runBlocking(pickUp());
                 sleep(300);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", fifthSample.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( fifthSample.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(fifthSample.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(500);
-                if (logSampleSide) { sampleSideLog.logSample( true, "Collection", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Collection" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose.toPose2d().position, collectionPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose.toPose2d() ); }
                 Actions.runBlocking(floorPickUpPrep());
                 sleep(700);
                 Actions.runBlocking(pickUp());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 Actions.runBlocking(floorPickUpPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Collection 2", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Collection 2" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose2.toPose2d().position, collectionPose2.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose2.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose2.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(pickUp());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose2.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose2.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose2.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(300);
                 Actions.runBlocking(lastFloorPickUpPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Collection 3", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Collection 3" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(collectionPose3.toPose2d().position, collectionPose3.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", collectionPose3.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose3.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(lastFloorPickUp1());
                 sleep(300);
                 Actions.runBlocking(lastFloorPickUp2());
                 sleep(500);
                 Actions.runBlocking(highBucketPrep());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Deposit", collectionPose2.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( collectionPose2.toPose2d(), "Deposit" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(collectionPose2.toPose2d())
                                 .strafeToLinearHeading(depositPose.toPose2d().position, depositPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d() ); }
                 sleep(750);
                 Actions.runBlocking(openClaw());
                 sleep(500);
                 Actions.runBlocking(armParkPose());
-                if (logSampleSide) { sampleSideLog.logSample( true, "Pre-Park", depositPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( depositPose.toPose2d(), "Pre-Park" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(depositPose.toPose2d())
                                 .strafeToLinearHeading(preParkPose.toPose2d().position, preParkPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", preParkPose.toPose2d() ); }
-                if (logSampleSide) { sampleSideLog.logSample( true, "Park", preParkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( preParkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( preParkPose.toPose2d(), "Park" ); }
                 Actions.runBlocking(
                         drive.actionBuilder(preParkPose.toPose2d())
                                 .strafeToLinearHeading(parkPose.toPose2d().position, preParkPose.toPose2d().heading)
                                 .build()
                 );
-                if (logSampleSide) { sampleSideLog.logSample( false, "", parkPose.toPose2d() ); }
+                if (logSampleSide) { sampleSideLog.logAction( parkPose.toPose2d() ); }
                 sleep(1500);
             }
         }

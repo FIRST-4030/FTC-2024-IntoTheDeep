@@ -5,7 +5,6 @@ import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.MinVelConstraint;
-import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.TurnConstraints;
@@ -19,39 +18,45 @@ import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.Pose2dWrapper;
+import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 @Config
 @Autonomous
-public class MecanumAutoDetails extends LinearOpMode {
+public class MecanumAutoSandbox extends LinearOpMode {
 
-    enum Options { TBD, OneStrafeWithConstant, StrafeTurn, Turn }
+    enum Options { TBD, OneRotation, Sample5 }
 
+    Action thisAction;
+    boolean inputComplete = false;
+    int increment = 0;
     LogFile detailsLog;
     NewMecanumDrive drive;
-    boolean inputComplete = false;
     Options option = Options.TBD;
-    int startX = 0;
-    int increment = 0;
-    Action thisAction;
 
     public static boolean logDetails = true;
     public static double baseVel = 40.0;
     public static double accelMin = -20.0;
     public static double accelMax = 50.0;
+    public static double moveIncrement = 0.0001;
+    public static double baseX = 5;
+    public static double baseY = 5;
+    public static double baseHead = 0;
+    public static double step1X = -6;
+    public static double step1Y = 55;
+    public static double step1Head = 90;
+    public static double step2X = -6;
+    public static double step2Y = -35;
+    public static double step2Head = 30;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        if (logDetails) {
-            detailsLog = new LogFile("details", "csv");
-            detailsLog.logDetailsTitles();
-        }
-
-        Pose2dWrapper startPose = new Pose2dWrapper(startX, -55, Math.toRadians(0));
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
         VelConstraint baseVelConstraint = new MinVelConstraint(Arrays.asList(
                 new TranslationalVelConstraint(baseVel),
@@ -60,6 +65,8 @@ public class MecanumAutoDetails extends LinearOpMode {
         AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(accelMin, accelMax);
 
         TurnConstraints turnConstraints = new TurnConstraints(Math.toRadians(90),Math.toRadians(90),Math.toRadians(90));
+
+        Pose2dWrapper startPose = new Pose2dWrapper( baseX, baseY, Math.toRadians(baseHead));
 
         drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog, logDetails);
 
@@ -81,17 +88,12 @@ public class MecanumAutoDetails extends LinearOpMode {
                 }
 
                 if (inputHandler.up("D1:A")) {
-                    option = Options.OneStrafeWithConstant;
+                    option = Options.OneRotation;
                     inputTimer.reset();
                 }
 
                 if (inputHandler.up("D1:B")) {
-                    option = Options.StrafeTurn;
-                    inputTimer.reset();
-                }
-
-                if (inputHandler.up("D1:Y")) {
-                    option = Options.Turn;
+                    option = Options.Sample5;
                     inputTimer.reset();
                 }
 
@@ -108,60 +110,47 @@ public class MecanumAutoDetails extends LinearOpMode {
 
             telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
             telemetry.addLine();
-            telemetry.addData("Option:   ", option);
+            telemetry.addData("Option (A-OneRotation, B-Sample5): ", option);
             telemetry.addData("Increment: ", increment);
             telemetry.addData("Press X to finalize values", inputComplete);
             telemetry.update();
         }
 
-        Pose2dWrapper step1Pose = new Pose2dWrapper(startX + increment, -56, Math.toRadians(120));
-        Pose2d step2Pose = new Pose2d(startX + increment, -56,Math.toRadians(120));
-
         thisAction = drive.actionBuilder(startPose.toPose2d())
                 .turn(Math.toRadians(120))
                 .build();
+        Pose2dWrapper noMovePose = new Pose2dWrapper(baseX+moveIncrement, baseY, Math.toRadians(step1Head));
 
         waitForStart();
         if (isStopRequested()) return;
 
         switch (option) {
-             case OneStrafeWithConstant:
-                thisAction = drive.actionBuilder(startPose.toPose2d())
-                        .strafeToConstantHeading(step1Pose.toPose2d().position)
+            case OneRotation:
+                String parY          = String.format(Locale.US, "%.2f",TwoDeadWheelLocalizer.PARAMS.parallelDistance);
+                String perpX         = String.format(Locale.US, "%.2f",TwoDeadWheelLocalizer.PARAMS.perpDistance);
+                String parallel      = "" + TwoDeadWheelLocalizer.PARAMS.parYTicks;
+                String perpendicular = "" + TwoDeadWheelLocalizer.PARAMS.perpXTicks;
+
+                detailsLog.log("Parallel: "+parY+" ("+parallel+"), Perpendicular: "+perpX+" ("+perpendicular+")");
+
+                Action strafeAction = drive.actionBuilder(startPose.toPose2d())
+                        .strafeToLinearHeading(noMovePose.toPose2d().position,noMovePose.toPose2d().heading.toDouble())
                         .build();
-                detailsLog.log("1,One Strafe");
+                Actions.runBlocking(strafeAction);
+
+                detailsLog.logDelta(noMovePose.toPose2d(),drive.pose);
+                break;
+            case Sample5:
+                detailsLog.log("1,Start");
+                Pose2dWrapper step1Pose = new Pose2dWrapper(step1X, step1Y, Math.toRadians(step1Head));
+                Pose2dWrapper step2Pose = new Pose2dWrapper( step2X, step2Y, Math.toRadians(step2Head) );
+                thisAction = drive.actionBuilder(startPose.toPose2d())
+                        .splineToLinearHeading(step1Pose.toPose2d(),step1Pose.heading)
+                        .waitSeconds(2.0)
+                        .strafeToConstantHeading(step2Pose.toPose2d().position)
+                        .build();
                 Actions.runBlocking(thisAction);
                 break;
-            case StrafeTurn:
-                Action strafeAction = drive.actionBuilder(startPose.toPose2d())
-//                        .strafeToConstantHeading(step1Pose.toPose2d().position)
-                        .strafeToLinearHeading(step1Pose.toPose2d().position,step1Pose.heading)
-                        .build();
-//                Pose2d thisPose = new Pose2d (step1Pose.toPose2d().position.x,step1Pose.toPose2d().position.y,Math.toRadians(120));
-//                Action strafeTurnAction = drive.actionBuilder(step1Pose.toPose2d())
-//                        .turn(thisPose.heading.toDouble())
-//                        .build();
-//                Action strafeTurnAction = drive.actionBuilder(step1Pose.toPose2d())
-//                        .turn(Math.toRadians(60))
-//                        .build();
-                detailsLog.log("1,Strafe");
-                Actions.runBlocking(strafeAction);
-                detailsLog.log("1,Turn");
-//                Actions.runBlocking(strafeTurnAction);
-                break;
-            case Turn:
-                Action splineAction = drive.actionBuilder(startPose.toPose2d())
-//                        .splineTo(step1Pose.toPose2d().position,step1Pose.heading,baseVelConstraint,baseAccelConstraint)
-                        .build();
-                Action splineTurnAction = drive.actionBuilder(startPose.toPose2d())
-                        .turn(Math.toRadians(60))
-                        .build();
-                detailsLog.log("1,Spline");
-                Actions.runBlocking(splineAction);
-                detailsLog.log("1,Turn");
-                Actions.runBlocking(splineTurnAction);
-                break;
         }
-        detailsLog.log("1,Done");
     }
 }
