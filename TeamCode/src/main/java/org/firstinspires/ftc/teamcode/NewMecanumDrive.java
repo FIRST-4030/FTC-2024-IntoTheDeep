@@ -401,10 +401,10 @@ public class NewMecanumDrive {
             PoseVelocity2d robotVelRobot = updatePoseEstimate();
 
             Pose2d error = txWorldTarget.value().minusExp(pose);
-
+            //TODO: Change duration to 0.65 if necessary
             if ((t >= timeTrajectory.duration && error.position.norm() < 2
                     && robotVelRobot.linearVel.norm() < 0.5)
-                    || t >= timeTrajectory.duration + 0.65) {
+                    || t >= timeTrajectory.duration + 0.00) {
                 leftFront.setPower(0);
                 leftBack.setPower(0);
                 rightBack.setPower(0);
@@ -626,9 +626,9 @@ public class NewMecanumDrive {
             PARAMS.kV = 0.00010920853856016985;
             PARAMS.kA = 0.000009;
 
-            PARAMS.maxWheelVel = 43;
+            PARAMS.maxWheelVel = 55;
             PARAMS.minProfileAccel = -30;
-            PARAMS.maxProfileAccel = 40;
+            PARAMS.maxProfileAccel = 50;
 
             PARAMS.axialGain = 8.0;
             PARAMS.lateralGain = 15.0;
