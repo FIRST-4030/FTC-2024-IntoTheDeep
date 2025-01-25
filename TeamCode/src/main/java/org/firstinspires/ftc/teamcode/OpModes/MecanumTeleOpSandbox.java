@@ -88,7 +88,7 @@ public class MecanumTeleOpSandbox extends OpMode
         telemetry.update();
     }
 
-    void handleInput() {
+    private void handleInput() {
         inputHandler.loop();
 
         if (inputHandler.up("D1:START")) {
@@ -110,14 +110,14 @@ public class MecanumTeleOpSandbox extends OpMode
 
         telemetry.update();
     }
-        void moveFromWallToSubmersible() {
+        private void moveFromWallToSubmersible() {
         Action stabilizerAction = drive.actionBuilder(startPose.toPose2d())
                     .strafeToLinearHeading(stabilizerPose.toPose2d().position,stabilizerPose.toPose2d().heading)
                     .build();
         Actions.runBlocking(stabilizerAction);
     }
 
-    void moveFromSubmersibleToWall() {
+    private void moveFromSubmersibleToWall() {
         Action startAction = drive.actionBuilder(stabilizerPose.toPose2d())
                     .strafeToLinearHeading(startPose.toPose2d().position,startPose.toPose2d().heading)
                     .build();

@@ -460,7 +460,7 @@ public class NewMecanumDrive {
             c.setStrokeWidth(1);
             c.strokePolyline(xPoints, yPoints);
 
-            if (writeIt) { filePtr.logDetails(robotVelRobot, error); }
+            //if (writeIt) { filePtr.logDetails(robotVelRobot, error); }
 
             return true;
         }
@@ -626,9 +626,9 @@ public class NewMecanumDrive {
             PARAMS.kV = 0.00010920853856016985;
             PARAMS.kA = 0.000009;
 
-            PARAMS.maxWheelVel = 55;
-            PARAMS.minProfileAccel = -30;
-            PARAMS.maxProfileAccel = 50;
+            PARAMS.maxWheelVel = 57.5;
+            PARAMS.minProfileAccel = -39;
+            PARAMS.maxProfileAccel = 52;
 
             PARAMS.axialGain = 8.0;
             PARAMS.lateralGain = 15.0;

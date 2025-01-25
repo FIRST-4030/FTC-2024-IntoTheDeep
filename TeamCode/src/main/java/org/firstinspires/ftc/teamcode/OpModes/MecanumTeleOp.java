@@ -146,7 +146,7 @@ public class MecanumTeleOp extends OpMode {
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
         //TODO: Update reset on liftExtension for competition day
         liftRotation = new LinearMotorController(hardwareMap, "swing",
-                3000, false, true);
+                3000, false, false);
 
 
         clawTimer = new ElapsedTime();
@@ -178,13 +178,13 @@ public class MecanumTeleOp extends OpMode {
         while(startTimer.milliseconds() <= 300) {
             clawServo.setPosition(0.95);
             wrist.setPosition(1);
-            wristRotation.setPosition(0.44);
+            wristRotation.setPosition(0.39);
             leftHangServo.setPosition(0.55);
             rightHangServo.setPosition(0.475);
 
         }
         liftExtension = new LinearMotorController(hardwareMap, "slide",
-                1390, true, true);
+                1390, true, false);
         //initializeArm();
     }
 
@@ -221,7 +221,7 @@ public class MecanumTeleOp extends OpMode {
                 telemetry.addData("Trig Theta Angle: ", theta);
                 telemetry.addData("Trig Wrist Pos: ", wrist.getPosition());
                 liftRotation.setTarget((int) (((theta * rotationTicksPerDegree) - (MINIMUM_DEGREES * rotationTicksPerDegree))));
-                wrist.setPosition(0.45 - theta * SERVO_DELTA_PER_DEGREE_270);
+                wrist.setPosition(0.50 - theta * SERVO_DELTA_PER_DEGREE_270);
 
                 //liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT);
                 //liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
@@ -229,7 +229,7 @@ public class MecanumTeleOp extends OpMode {
             } else {
                 liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
                 liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT, rotationTouchSensor.isPressed());
-                wristRotation.setPosition(0.44);
+                wristRotation.setPosition(0.39);
             }
         }
         if(hanging && rotationTouchSensor.isPressed()){
@@ -467,7 +467,7 @@ public class MecanumTeleOp extends OpMode {
         liftExtension.setTarget(200);
         clawServo.setPosition(0.95);
         clawOpen = false;
-        wrist.setPosition(0.5);
+        wrist.setPosition(0.55);
     }
 
     public void experimentalSpecimenCollectionPos(){
