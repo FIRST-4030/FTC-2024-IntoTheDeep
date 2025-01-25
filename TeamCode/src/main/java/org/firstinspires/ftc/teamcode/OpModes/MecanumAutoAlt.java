@@ -46,9 +46,10 @@ public class MecanumAutoAlt extends LinearOpMode {
         Pose2dWrapper PushPose2 = new Pose2dWrapper(57, -52, Math.toRadians(90));
         Pose2dWrapper LineUpPushPoseX3 = new Pose2dWrapper(63 , -6, Math.toRadians(90));
         Pose2dWrapper PushPose3 = new Pose2dWrapper(61, -52, Math.toRadians(90));
-        drive = new NewMecanumDrive(hardwareMap, ExperimentalStartPose.toPose2d(), detailsLog, logDetails);
 
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv" ); }
+
+        drive = new NewMecanumDrive(hardwareMap, ExperimentalStartPose.toPose2d(), detailsLog, logDetails);
 
         Telemetry();
 
