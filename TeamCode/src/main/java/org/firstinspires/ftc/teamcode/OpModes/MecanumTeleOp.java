@@ -1,7 +1,12 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import androidx.annotation.NonNull;
+
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,6 +23,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.LinearMotorController;
 import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
+import org.firstinspires.ftc.teamcode.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
@@ -109,6 +115,12 @@ public class MecanumTeleOp extends OpMode {
     DcMotor paralellEncoder;
     public static boolean logDetails = false;
     LogFile detailsLog;
+    public static double startX = 2.3;
+    public static double startY = -28.5;
+    public static double targetX = 9.8;
+    public static double targetY = -28.5;
+    Pose2dWrapper startPose = new Pose2dWrapper(startX, startY, Math.toRadians(90));
+    Pose2dWrapper targetPose = new Pose2dWrapper(targetX, targetY, Math.toRadians(90));
 
     @Override
     public void init() {
@@ -432,7 +444,26 @@ public class MecanumTeleOp extends OpMode {
                 secondHang = true;
             }
         }
+        if(inputHandler.up("D2:BACK")){
+            Action action1 = armExtend();
+            Actions.runBlocking(action1);
+            sleep(275);
+            Action action2 = collect();
+            Actions.runBlocking(action2);
+            sleep(250);
+            Action action3 = experimentalPreScore();
+            Actions.runBlocking(action3);
+            goToDeposit();
+            Action action4 = experimentalExtendScore();
+            Actions.runBlocking(action4);
+            sleep(225);
+            Action action5 = experimentalCollectionPrep();
+            Actions.runBlocking(action5);
+            goToCollection();
+            sleep(225);
+        }
     }
+
 
     public void beginHang(){
         trig = false;
@@ -452,6 +483,7 @@ public class MecanumTeleOp extends OpMode {
             wrist.setPosition(0.4);
 
         }
+
     }
     public void thirdLevelHang()
     {
@@ -553,6 +585,14 @@ public class MecanumTeleOp extends OpMode {
     public void outputLog() {
 
     }
+/*
+    public void scoringCycle(){
+        While(inputHandler.up("D2:BACK")){
+            Actions.runBlocking(armExtend());
+        }
+    }
+*/
+
 
     public void initializeArm() {
         highBasket = false;
@@ -604,6 +644,92 @@ public class MecanumTeleOp extends OpMode {
             }
         }
     }
+    public Action armExtend() {
+        return new Action() {
 
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftExtension.setTarget(385);
+                wrist.setPosition(0.5);
+                return timer.milliseconds() >= 220;
+            }
+        };
+    }
+    public Action collect() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                clawServo.setPosition(1);
+                return timer.milliseconds() > 300;
+            }
+        };
+    }
+    public Action experimentalPreScore() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                wrist.setPosition(0.955);
+                clawServo.setPosition(0.975);
+                liftRotation.setTarget(2955);
+                liftExtension.setTarget(0);
+                return liftRotation.getLiftMotor().getCurrentPosition() > 2960;
+            }
+        };
+    }
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+    public Action experimentalExtendScore() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftExtension.setTarget(380);
+                liftRotation.setTarget(2955);
+                wrist.setPosition(0.3);
+                return timer.milliseconds() >= 300;
+            }
+        };
+    }
+    public Action experimentalCollectionPrep() {
+        return new Action() {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                ElapsedTime timer = new ElapsedTime();
+                liftRotation.setTarget(865);
+                liftExtension.setTarget(0);
+                clawServo.setPosition(0.3);
+                wrist.setPosition(0.5);
+                return timer.milliseconds() > 1100;
+            }
+        };
+    }
+    void goToDeposit()
+    {
+        Action action4 = drive.actionBuilder(startPose.toPose2d())
+                .strafeToLinearHeading(targetPose.toPose2d().position, targetPose.toPose2d().heading)
+                .build();
+        Actions.runBlocking(action4);
+
+    }
+    void goToCollection()
+    {
+        Action action5 = drive.actionBuilder(targetPose.toPose2d())
+                .strafeToLinearHeading(startPose.toPose2d().position, startPose.toPose2d().heading)
+                .build();
+        Actions.runBlocking(action5);
+
+    }
 
 }

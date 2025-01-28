@@ -126,15 +126,23 @@ public class MecanumTeleOpAlt extends OpMode
     void handleInput() {
         inputHandler.loop();
         if(inputHandler.up("D1:Y")) {
-            turnInPlace();
+            goToDeposit();
         }
     }
-    void turnInPlace()
+    void goToDeposit()
     {
-        Action action1 = drive.actionBuilder(startPose.toPose2d())
+        Action action4 = drive.actionBuilder(startPose.toPose2d())
                 .strafeToLinearHeading(targetPose.toPose2d().position, targetPose.toPose2d().heading)
                 .build();
-        Actions.runBlocking(action1);
+        Actions.runBlocking(action4);
+
+    }
+    void goToCollection()
+    {
+        Action action5 = drive.actionBuilder(targetPose.toPose2d())
+                .strafeToLinearHeading(startPose.toPose2d().position, startPose.toPose2d().heading)
+                .build();
+        Actions.runBlocking(action5);
 
     }
 }
