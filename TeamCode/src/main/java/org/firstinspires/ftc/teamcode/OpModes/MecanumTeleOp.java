@@ -444,22 +444,29 @@ public class MecanumTeleOp extends OpMode {
                 secondHang = true;
             }
         }
-        if(inputHandler.up("D2:BACK")){
+        if(inputHandler.down("D2:BACK")){
             Action action1 = armExtend();
             Actions.runBlocking(action1);
+            if(inputHandler.held("D2:BACK"));
             sleep(275);
             Action action2 = collect();
             Actions.runBlocking(action2);
+            if(inputHandler.held("D2:BACK"));
             sleep(250);
             Action action3 = experimentalPreScore();
             Actions.runBlocking(action3);
+            if(inputHandler.held("D2:BACK"));
             goToDeposit();
+            if(inputHandler.held("D2:BACK"));
             Action action4 = experimentalExtendScore();
             Actions.runBlocking(action4);
+            if(inputHandler.held("D2:BACK"));
             sleep(225);
             Action action5 = experimentalCollectionPrep();
             Actions.runBlocking(action5);
+            if(inputHandler.held("D2:BACK"));
             goToCollection();
+            if(inputHandler.held("D2:BACK"));
             sleep(225);
         }
     }
