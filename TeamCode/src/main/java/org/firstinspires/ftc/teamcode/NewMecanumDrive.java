@@ -67,6 +67,7 @@ import java.util.List;
 public class NewMecanumDrive {
     private final LogFile filePtr;
     private final boolean writeIt;
+    private static double extraTime = 0.00;
 
     public static class Params {
         // IMU orientation
@@ -364,6 +365,10 @@ public class NewMecanumDrive {
         rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
     }
 
+    public void setExtraTime(double newTime){
+        extraTime = newTime;
+    }
+
     public final class FollowTrajectoryAction implements Action {
         public final TimeTrajectory timeTrajectory;
         private double beginTs = -1;
@@ -385,6 +390,7 @@ public class NewMecanumDrive {
             }
         }
 
+
         @Override
         public boolean run(@NonNull TelemetryPacket p) {
             double t;
@@ -404,7 +410,7 @@ public class NewMecanumDrive {
             //TODO: Change duration to 0.65 if necessary
             if ((t >= timeTrajectory.duration && error.position.norm() < 2
                     && robotVelRobot.linearVel.norm() < 0.5)
-                    || t >= timeTrajectory.duration + 0.00) {
+                    || t >= timeTrajectory.duration + extraTime) {
                 leftFront.setPower(0);
                 leftBack.setPower(0);
                 rightBack.setPower(0);
@@ -626,7 +632,7 @@ public class NewMecanumDrive {
             PARAMS.kV = 0.00010920853856016985;
             PARAMS.kA = 0.000009;
 
-            PARAMS.maxWheelVel = 57.5;
+            PARAMS.maxWheelVel = 57.95;
             PARAMS.minProfileAccel = -39;
             PARAMS.maxProfileAccel = 52;
 

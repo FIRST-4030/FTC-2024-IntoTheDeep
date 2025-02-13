@@ -34,7 +34,7 @@ public class MecanumTeleOp extends OpMode {
 
     //0.00370370 = 1 degree on a 270 servo
     final int LIFT_ROT_COEFFICIENT = 39;
-    final int LIFT_EXT_COEFFICIENT = 40;
+    final int LIFT_EXT_COEFFICIENT = 50;
     final double STARTING_LENGTH = 14.5;
     final double SERVO_DELTA_PER_DEGREE_270 = 0.00370370370;
     final int MINIMUM_DEGREES = 56;
@@ -55,6 +55,7 @@ public class MecanumTeleOp extends OpMode {
     boolean stopStrain = false;
     boolean ran = false;
     boolean resetRot = false;
+    boolean automate = false;
 
 
     double driveCoefficient = 1;
@@ -76,6 +77,7 @@ public class MecanumTeleOp extends OpMode {
     boolean resetIMU = false;
     boolean hanging = false;
     boolean basket = false;
+    boolean liftReset = false;
 
     TouchSensor rotationTouchSensor;
 
@@ -219,7 +221,7 @@ public class MecanumTeleOp extends OpMode {
             }
         } else {
             if(trig) {
-                liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
+                if(!liftReset) liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
                 wristRotation.setPosition(wristRotation.getPosition()+gamepad2.left_stick_x*0.033);
                 extensionInches = (liftExtension.getLiftMotor().getCurrentPosition() / extensionTicksPerIn)
                         + STARTING_LENGTH;
@@ -239,7 +241,7 @@ public class MecanumTeleOp extends OpMode {
                 //liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT);
 
             } else {
-                liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
+                if (!liftReset) liftExtension.update(liftExtControl, LIFT_EXT_COEFFICIENT, false);
                 liftRotation.update(liftRotControl, LIFT_ROT_COEFFICIENT, rotationTouchSensor.isPressed());
                 wristRotation.setPosition(0.39);
             }
@@ -343,6 +345,19 @@ public class MecanumTeleOp extends OpMode {
             resetIMU = true;
         }
 
+        if(inputHandler.up("D1:BACK")){
+            liftReset = !liftReset;
+            if(liftReset){
+                liftExtension.getLiftMotor().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                liftExtension.getLiftMotor().setPower(0);
+            } else {
+                liftExtension.getLiftMotor().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                liftExtension.getLiftMotor().setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                liftExtension.setTarget(0);
+                liftExtension.getLiftMotor().setPower(1);
+            }
+        }
+
         slowMode = inputHandler.active("D1:RT");
 
         if(gamepad1.left_stick_x != 0){
@@ -350,8 +365,12 @@ public class MecanumTeleOp extends OpMode {
             headingTimer.reset();
         }
 
-        if(inputHandler.up("D1:DPAD_UP")){
+        if(inputHandler.held("D1:DPAD_UP") && liftReset){
+            liftExtension.getLiftMotor().setPower(0.4);
+        }
 
+        if(inputHandler.held("D1:DPAD_DOWN") && liftReset){
+            liftExtension.getLiftMotor().setPower(-0.4);
         }
 
         if(inputHandler.up("D2:Y")){
@@ -444,23 +463,56 @@ public class MecanumTeleOp extends OpMode {
                 secondHang = true;
             }
         }
-        if(inputHandler.up("D2:BACK")){
+        if(inputHandler.down("D2:BACK")){
+            //automate = true;
+        }
+
+
+        while(automate){
             Action action1 = armExtend();
             Actions.runBlocking(action1);
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             sleep(275);
             Action action2 = collect();
             Actions.runBlocking(action2);
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             sleep(250);
             Action action3 = experimentalPreScore();
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             Actions.runBlocking(action3);
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             goToDeposit();
             Action action4 = experimentalExtendScore();
             Actions.runBlocking(action4);
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             sleep(225);
             Action action5 = experimentalCollectionPrep();
             Actions.runBlocking(action5);
+            /*if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }
             goToCollection();
             sleep(225);
+            if(!inputHandler.active("D2:BACK")) {
+                automate = false;
+                break;
+            }*/
         }
     }
 
