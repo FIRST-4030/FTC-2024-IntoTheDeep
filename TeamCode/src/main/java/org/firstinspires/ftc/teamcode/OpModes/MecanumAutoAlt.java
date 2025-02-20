@@ -50,6 +50,9 @@ public class MecanumAutoAlt extends LinearOpMode {
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv" ); }
 
         drive = new NewMecanumDrive(hardwareMap, ExperimentalStartPose.toPose2d(), detailsLog, logDetails);
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
+        }
 
         Telemetry();
 

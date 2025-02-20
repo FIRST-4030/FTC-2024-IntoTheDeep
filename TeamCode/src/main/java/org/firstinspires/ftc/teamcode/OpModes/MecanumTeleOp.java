@@ -57,7 +57,6 @@ public class MecanumTeleOp extends OpMode {
     boolean resetRot = false;
     boolean automate = false;
 
-
     double driveCoefficient = 1;
     IMU imu;
     Orientation or;
@@ -104,7 +103,6 @@ public class MecanumTeleOp extends OpMode {
     boolean resetHeading = false;
     boolean clawOpen = true;
 
-
     double liftRotControl = 0;
     double liftExtControl = 0;
     double yawToFix;
@@ -112,7 +110,6 @@ public class MecanumTeleOp extends OpMode {
     double priorYaw = 0;
     double deltaYaw;
     double savedOrientation;
-
 
     DcMotor paralellEncoder;
     public static boolean logDetails = false;
@@ -145,8 +142,6 @@ public class MecanumTeleOp extends OpMode {
 
         leftHangServo = hardwareMap.get(Servo.class, "leftHangServo");
         rightHangServo = hardwareMap.get(Servo.class, "rightHangServo");
-
-
         /*
         imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
@@ -157,11 +152,17 @@ public class MecanumTeleOp extends OpMode {
         globalIMUHeading = or.thirdAngle;
 
         //initialize drive, empty Vector as we are not using the Roadrunner drive methods in TeleOp
+
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
+
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
+            telemetry.update();
+        }
         //TODO: Update reset on liftExtension for competition day
         liftRotation = new LinearMotorController(hardwareMap, "swing",
                 3000, false, false);
-
 
         clawTimer = new ElapsedTime();
 
@@ -174,7 +175,6 @@ public class MecanumTeleOp extends OpMode {
         //Initialize encoder wheels
         //paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
         //paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
     }
 
     public void init_loop(){
@@ -259,7 +259,6 @@ public class MecanumTeleOp extends OpMode {
         deltaTime = timer.milliseconds() - previousTime;
         previousTime += deltaTime;
 
-
         // Display the current value
 
         telemetry.addData("Wrist pos: ", wristRotation.getPosition());
@@ -267,20 +266,16 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("Pitch: ", imu.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS));
         telemetry.addData("Roll: ", imu.getRobotYawPitchRollAngles().getRoll(AngleUnit.RADIANS));
 
-
-
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
 
         headingError = or.thirdAngle - globalIMUHeading;
         if(headingError > Math.PI) headingError -= 2*Math.PI;
         else if(headingError < -Math.PI) headingError += 2*Math.PI;
 
-
         telemetry.addData("error: ", headingError);
 
         //Main Drive Update Code: :)
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
-
 
         if(basket) {
             liftExtension.setTickLimit(1390);
@@ -467,7 +462,6 @@ public class MecanumTeleOp extends OpMode {
             //automate = true;
         }
 
-
         while(automate){
             Action action1 = armExtend();
             Actions.runBlocking(action1);
@@ -516,7 +510,6 @@ public class MecanumTeleOp extends OpMode {
         }
     }
 
-
     public void beginHang(){
         trig = false;
         basket = false;
@@ -535,7 +528,6 @@ public class MecanumTeleOp extends OpMode {
             wrist.setPosition(0.4);
 
         }
-
     }
     public void thirdLevelHang()
     {

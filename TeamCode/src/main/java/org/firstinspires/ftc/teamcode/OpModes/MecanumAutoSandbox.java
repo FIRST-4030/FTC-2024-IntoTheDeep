@@ -12,6 +12,7 @@ import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.BuildConfig;
@@ -29,29 +30,42 @@ import java.util.Locale;
 @Autonomous
 public class MecanumAutoSandbox extends LinearOpMode {
 
-    enum Options { TBD, OneRotation, Sample5 }
+    enum Options { TBD, OneRotation, To_Stabilizer, To_Wall }
 
     Action thisAction;
     boolean inputComplete = false;
-    int increment = 0;
     LogFile detailsLog;
     NewMecanumDrive drive;
     Options option = Options.TBD;
+    IMU imu;
 
     public static boolean logDetails = true;
-    public static double baseVel = 40.0;
+
+    public static double largeLeft = -40;
+    public static double largeForward = 30;
+    public static double smallForward = 15;
+    public static double shoveLeft = -10;
+
+    public static double midEndX = 60;
+    public static double midEndY = -30;
+    public static double endX = 60;
+    public static double endY = -37;
+
+    public static double startVel = 40.0;
     public static double accelMin = -20.0;
     public static double accelMax = 50.0;
     public static double moveIncrement = 0.0001;
-    public static double baseX = 5;
-    public static double baseY = 5;
-    public static double baseHead = 0;
-    public static double step1X = -6;
-    public static double step1Y = 55;
+    public static double startX = 7;
+    public static double startY = 7;
+    public static double startHead = 90;
     public static double step1Head = 90;
-    public static double step2X = -6;
-    public static double step2Y = -35;
-    public static double step2Head = 30;
+    public static double step2Head = 90;
+
+    Double largeMoveLeftX;
+    Double largeMoveLeftY;
+    Double smallMoveForwardX;
+    Double smallMoveForwardY;
+    Double shoveLeftX;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -59,16 +73,21 @@ public class MecanumAutoSandbox extends LinearOpMode {
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
         VelConstraint baseVelConstraint = new MinVelConstraint(Arrays.asList(
-                new TranslationalVelConstraint(baseVel),
+                new TranslationalVelConstraint(startVel),
                 new AngularVelConstraint(Math.PI / 2)
         ));
         AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(accelMin, accelMax);
 
         TurnConstraints turnConstraints = new TurnConstraints(Math.toRadians(90),Math.toRadians(90),Math.toRadians(90));
 
-        Pose2dWrapper startPose = new Pose2dWrapper( baseX, baseY, Math.toRadians(baseHead));
+        Pose2dWrapper startPose = new Pose2dWrapper( startX, startY, Math.toRadians(startHead));
+
+        imu = hardwareMap.get(IMU.class, "imu");
 
         drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog, logDetails);
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
+        }
 
         InputHandler inputHandler;
         ElapsedTime runtime = new ElapsedTime();
@@ -92,26 +111,24 @@ public class MecanumAutoSandbox extends LinearOpMode {
                     inputTimer.reset();
                 }
 
-                if (inputHandler.up("D1:B")) {
-                    option = Options.Sample5;
+                if (inputHandler.up("D1:DPAD_UP")) {
+                    option = Options.To_Stabilizer;
                     inputTimer.reset();
                 }
 
-                if (inputHandler.up("D1:LT")) {
-                    increment++;
-                    inputTimer.reset();
-                }
-
-                if (inputHandler.up("D1:RT")) {
-                    increment--;
+                if (inputHandler.up("D1:DPAD_DOWN")) {
+                    option = Options.To_Wall;
                     inputTimer.reset();
                 }
             }
 
             telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
             telemetry.addLine();
-            telemetry.addData("Option (A-OneRotation, B-Sample5): ", option);
-            telemetry.addData("Increment: ", increment);
+            telemetry.addLine("Options");
+            telemetry.addData("   D1:A:","OneRotation");
+            telemetry.addData("   D1:DPAD_UP:","To Stabilizer");
+            telemetry.addData("   D1:DPAD_DOWN:","To Wall");
+            telemetry.addData("Option: ", option);
             telemetry.addData("Press X to finalize values", inputComplete);
             telemetry.update();
         }
@@ -119,10 +136,24 @@ public class MecanumAutoSandbox extends LinearOpMode {
         thisAction = drive.actionBuilder(startPose.toPose2d())
                 .turn(Math.toRadians(120))
                 .build();
-        Pose2dWrapper noMovePose = new Pose2dWrapper(baseX+moveIncrement, baseY, Math.toRadians(step1Head));
+        Pose2dWrapper noMovePose = new Pose2dWrapper(startX+moveIncrement, startY, Math.toRadians(step1Head));
 
         waitForStart();
         if (isStopRequested()) return;
+
+        largeMoveLeftX = startX + largeLeft;
+        largeMoveLeftY = startY + largeForward;
+        smallMoveForwardX = largeMoveLeftX;
+        smallMoveForwardY = largeMoveLeftY + smallForward;
+        shoveLeftX = smallMoveForwardX + shoveLeft;
+
+        Pose2dWrapper leftPose = new Pose2dWrapper(largeMoveLeftX, largeMoveLeftY, Math.toRadians(step1Head));
+        Pose2dWrapper forwardPose = new Pose2dWrapper(smallMoveForwardX, smallMoveForwardY, Math.toRadians(step2Head));
+        Pose2dWrapper shovePose = new Pose2dWrapper(shoveLeftX, smallMoveForwardY, Math.toRadians(step2Head));
+
+        Pose2dWrapper newStartPose = new Pose2dWrapper(0, 0, Math.toRadians(step2Head));
+        Pose2dWrapper midEndPose = new Pose2dWrapper(midEndX, midEndY, Math.toRadians(step2Head));
+        Pose2dWrapper endPose = new Pose2dWrapper(endX, endY, Math.toRadians(step2Head));
 
         switch (option) {
             case OneRotation:
@@ -140,16 +171,35 @@ public class MecanumAutoSandbox extends LinearOpMode {
 
                 detailsLog.logDelta(noMovePose.toPose2d(),drive.pose);
                 break;
-            case Sample5:
-                detailsLog.log("1,Start");
-                Pose2dWrapper step1Pose = new Pose2dWrapper(step1X, step1Y, Math.toRadians(step1Head));
-                Pose2dWrapper step2Pose = new Pose2dWrapper( step2X, step2Y, Math.toRadians(step2Head) );
+            case To_Stabilizer:
+                detailsLog.log("To Stabilizer");
+                detailsLog.log("Start X:"+startPose.toPose2d().position.x);
+                detailsLog.log("Start Y:"+startPose.toPose2d().position.y);
                 thisAction = drive.actionBuilder(startPose.toPose2d())
-                        .splineToLinearHeading(step1Pose.toPose2d(),step1Pose.heading)
-                        .waitSeconds(2.0)
-                        .strafeToConstantHeading(step2Pose.toPose2d().position)
+                        .strafeToConstantHeading(leftPose.toPose2d().position)
+                        .strafeToConstantHeading(forwardPose.toPose2d().position)
+                        .strafeToConstantHeading(shovePose.toPose2d().position)
                         .build();
                 Actions.runBlocking(thisAction);
+                detailsLog.log("Calculated End X:"+shovePose.toPose2d().position.x);
+                detailsLog.log("Calculated End Y:"+shovePose.toPose2d().position.y);
+                detailsLog.log("End X:"+drive.pose.position.x);
+                detailsLog.log("End Y:"+drive.pose.position.y);
+                detailsLog.log("End Heading:"+Math.toDegrees(drive.pose.heading.real));
+                break;
+            case To_Wall:
+                imu.resetYaw();
+                thisAction = drive.actionBuilder(newStartPose.toPose2d())
+                        .strafeToConstantHeading(midEndPose.toPose2d().position)
+                        .strafeToConstantHeading(endPose.toPose2d().position)
+                        .build();
+                Actions.runBlocking(thisAction);
+                detailsLog.log("To Wall");
+                detailsLog.log("Calculated End X:"+endPose.toPose2d().position.x);
+                detailsLog.log("Calculated End Y:"+endPose.toPose2d().position.y);
+                detailsLog.log("End X:"+drive.pose.position.x);
+                detailsLog.log("End Y:"+drive.pose.position.y);
+                detailsLog.log("End Heading:"+Math.toDegrees(drive.pose.heading.real));
                 break;
         }
     }

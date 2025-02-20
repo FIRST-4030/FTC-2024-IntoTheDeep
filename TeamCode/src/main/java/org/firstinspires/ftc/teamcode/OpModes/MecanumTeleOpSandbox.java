@@ -48,7 +48,13 @@ public class MecanumTeleOpSandbox extends OpMode
         imu = hardwareMap.get(IMU.class, "imu");
         runtime.reset();
 
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
+
         drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog, logDetails);
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
+            telemetry.update();
+        }
 
         //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);

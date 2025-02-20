@@ -163,6 +163,10 @@ public class MecanumAuto extends LinearOpMode {
         }
 
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog,true);
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
+        }
+
         if(!side){
             drive.setExtraTime(0.00);
         } else {

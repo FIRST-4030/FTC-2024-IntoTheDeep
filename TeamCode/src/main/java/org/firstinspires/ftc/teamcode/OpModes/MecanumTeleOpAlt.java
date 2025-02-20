@@ -87,10 +87,14 @@ public class MecanumTeleOpAlt extends OpMode
 
         inputHandler = InputAutoMapper.normal.autoMap(this);
         telemetry.addData("Status", "Initialized");
+
+        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
+
         drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
-        // what buttons do
-
-
+        if (!drive.controlHub.isMacAddressValid()) {
+            drive.controlHub.reportBadMacAddress(telemetry, hardwareMap);
+            telemetry.update();
+        }
     }
 
     /*
@@ -114,7 +118,6 @@ public class MecanumTeleOpAlt extends OpMode
     @Override
     public void loop() {
         handleInput();
-
     }
 
     /*
@@ -143,6 +146,5 @@ public class MecanumTeleOpAlt extends OpMode
                 .strafeToLinearHeading(startPose.toPose2d().position, startPose.toPose2d().heading)
                 .build();
         Actions.runBlocking(action5);
-
     }
 }

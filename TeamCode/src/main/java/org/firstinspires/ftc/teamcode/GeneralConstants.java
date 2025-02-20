@@ -2,7 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 public class GeneralConstants {
 
-    public static final String PRIMARY_BOT = "7462-RC";
+    public static final String PRIMARY_BOT = ControlHub.getBotAddress(2);
+    public static final String SECONDARY_BOT = ControlHub.getBotAddress(3);
     public static final boolean ENABLE_CALIBRATION = false;
 
     //These constant names allow for more effective grouping when the

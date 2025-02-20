@@ -100,6 +100,22 @@ public class LogFile {
 
     /**
      *
+     * @param vector - heading and position
+     */
+    public void logDetails(PoseVelocity2d vector) {
+        deltaTime = System.currentTimeMillis() - absoluteStartTime;
+        int filter = 0;
+        String message = filter + "," +
+                String.format(Locale.US, "%.4f", (deltaTime/1000.0)) + "," +
+                String.format(Locale.US, "%.4f", vector.angVel) + "," +
+                String.format(Locale.US, "%.4f", vector.linearVel.x) + "," +
+                String.format(Locale.US, "%.4f", vector.linearVel.y);
+
+        localLog( logWriter, message );
+    }
+
+    /**
+     *
      * @param pose - x & y position of the robot
      * @param label - text string used to describe the sample
      */

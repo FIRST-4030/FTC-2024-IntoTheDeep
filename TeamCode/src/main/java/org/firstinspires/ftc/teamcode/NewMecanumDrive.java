@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.GeneralConstants.PRIMARY_BOT;
+import static org.firstinspires.ftc.teamcode.GeneralConstants.SECONDARY_BOT;
 
 import androidx.annotation.NonNull;
 
@@ -108,11 +109,11 @@ public class NewMecanumDrive {
         public double headingVelGain; // shared with turn
     }
 
-    public static String networkName;
+    public static String macAddress;
 
     public static Params PARAMS = new Params();
 
-    ControlHub controlHub = new ControlHub();
+    public ControlHub controlHub = new ControlHub();
 
     public MecanumKinematics kinematics = null;
 
@@ -139,7 +140,6 @@ public class NewMecanumDrive {
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
-
 
     public double joystickX;
     public double joystickY;
@@ -238,7 +238,7 @@ public class NewMecanumDrive {
         this.filePtr = filePtr;
         this.writeIt = writeIt;
 
-        networkName = controlHub.getNetworkName();
+        this.macAddress = controlHub.getMacAddress();
 
         // set PARAMS based upon the network you are connected to
         setParams();
@@ -266,12 +266,12 @@ public class NewMecanumDrive {
 
         // TODO: reverse motor directions if needed
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        if (NewMecanumDrive.networkName.equals(PRIMARY_BOT)) {
+        if (macAddress.equals(PRIMARY_BOT)) {
             leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
         }
-        else {
+        else if (macAddress.equals(SECONDARY_BOT)) {
             leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
             leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
             rightBack.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -407,9 +407,8 @@ public class NewMecanumDrive {
             PoseVelocity2d robotVelRobot = updatePoseEstimate();
 
             Pose2d error = txWorldTarget.value().minusExp(pose);
-            //TODO: Change duration to 0.65 if necessary
             if ((t >= timeTrajectory.duration && error.position.norm() < 2
-                    && robotVelRobot.linearVel.norm() < 0.5)
+                    && robotVelRobot.linearVel.norm() < 0.65)
                     || t >= timeTrajectory.duration + extraTime) {
                 leftFront.setPower(0);
                 leftBack.setPower(0);
@@ -466,7 +465,7 @@ public class NewMecanumDrive {
             c.setStrokeWidth(1);
             c.strokePolyline(xPoints, yPoints);
 
-            //if (writeIt) { filePtr.logDetails(robotVelRobot, error); }
+            if (writeIt) { filePtr.logDetails(robotVelRobot, error); }
 
             return true;
         }
@@ -548,6 +547,8 @@ public class NewMecanumDrive {
             c.setStroke("#7C4DFFFF");
             c.fillCircle(turn.beginPose.position.x, turn.beginPose.position.y, 2);
 
+            if (writeIt) { filePtr.logDetails(robotVelRobot); }
+
             return true;
         }
 
@@ -622,7 +623,7 @@ public class NewMecanumDrive {
 
     private void setParams() {
 
-        if (networkName.equals(PRIMARY_BOT)) {
+        if (macAddress.equals(PRIMARY_BOT)) {
 
             PARAMS.inPerTick = 0.00057336671;
             PARAMS.lateralInPerTick = 0.0005854192942301951;
@@ -640,7 +641,7 @@ public class NewMecanumDrive {
             PARAMS.lateralGain = 15.0;
             PARAMS.headingGain = 15.0;
 
-        } else {
+        } else if (macAddress.equals(SECONDARY_BOT)) {
             PARAMS.inPerTick = 0.000566864859;
             PARAMS.lateralInPerTick = 0.0003896547740605162;
             PARAMS.trackWidthTicks = 22580.573725252547;
@@ -656,6 +657,22 @@ public class NewMecanumDrive {
             PARAMS.axialGain = 10.0;
             PARAMS.lateralGain = 2.0;
             PARAMS.headingGain = 5.0;
+        } else {
+            PARAMS.inPerTick = 1;
+            PARAMS.lateralInPerTick = PARAMS.inPerTick;
+            PARAMS.trackWidthTicks = 0;
+
+            PARAMS.kS = 0;
+            PARAMS.kV = 0;
+            PARAMS.kA = 0;
+
+            PARAMS.maxWheelVel = 50;
+            PARAMS.minProfileAccel = -30;
+            PARAMS.maxProfileAccel = 50;
+
+            PARAMS.axialGain = 0.0;
+            PARAMS.lateralGain = 0.0;
+            PARAMS.headingGain = 0.0; // shared with turn
         }
 
         PARAMS.maxAngVel = Math.PI;
