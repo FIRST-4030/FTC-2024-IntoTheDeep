@@ -1,17 +1,24 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import android.annotation.SuppressLint;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.BuildConfig;
 import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
-import org.firstinspires.ftc.teamcode.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
 import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
@@ -20,27 +27,31 @@ import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 @TeleOp()
 public class MecanumTeleOpSandbox extends OpMode
 {
-    public static double startX = 8;
-    public static double startY = -12;
-    public static double startHeading = 90;
-    public static double stabilizerX = -15;
-    public static double stabilizerY = 12;
-    public static double stabilizerHeading = 270;
+    public static boolean logDetails = true;
 
-    public static boolean logDetails = false;
+    enum POSITION { SET_START, SET_END }
 
-    boolean inputComplete = false;
     IMU imu;
+    Orientation or;
     InputHandler inputHandler;
     Vector3d mecanumController;
     NewMecanumDrive drive;
+    Action thisAction;
 
-    ElapsedTime inputTimer = new ElapsedTime();
     ElapsedTime runtime = new ElapsedTime();
     LogFile detailsLog;
-
-    public static Pose2dWrapper startPose = new Pose2dWrapper(startX, startY, startHeading);
-    public static Pose2dWrapper stabilizerPose = new Pose2dWrapper(stabilizerX, stabilizerY, stabilizerHeading);
+    double globalIMUHeading;
+    double headingError = 0;
+    boolean resetIMU = false;
+    double[] dpadPowerArray = new double[4];
+    double powerCoefficient = 1;
+    boolean precisionDrive = false;
+    double driveCoefficient = 0.65;
+    Pose2d newStart = null;
+    Pose2d newEnd = null;
+    Pose2d currentPose = null;
+    int iterations = 0;
+    boolean stopMoving = false;
 
     @Override
     public void init() {
@@ -50,7 +61,7 @@ public class MecanumTeleOpSandbox extends OpMode
 
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
-        drive = new NewMecanumDrive(hardwareMap, startPose.toPose2d(), detailsLog, logDetails);
+        drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
         if (!drive.controlHub.isMacAddressValid()) {
             drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
             telemetry.update();
@@ -65,27 +76,51 @@ public class MecanumTeleOpSandbox extends OpMode
 
     @Override
     public void init_loop() {
+
+        telemetry.addData("DPAD_UP: ", "increments 'iterations'");
+        telemetry.addData("DPAD_DOWN: ", "decrements 'iterations'");
+        telemetry.addData("A: ", "Moves robot 'iterations' times");
+        telemetry.addData("X: ", "Stops auto movement");
+        telemetry.addData("Y: ", "Locks in values");
+
+        if (inputHandler.up("D1:DPAD_UP")) {
+            iterations++;
+        }
+
+        if (inputHandler.up("D1:DPAD_DOWN")) {
+            iterations--;
+            if (iterations<0) iterations = 0;
+        }
+
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
-//        telemetry.addLine();
-//        if (inputTimer.milliseconds() > 250) {
-//
-//            if (inputHandler.up("D1:X")) {
-//                inputComplete = true;
-//                inputTimer.reset();
-//            }
-//        }
-//
-//        telemetry.addData("Press X to finalize values", inputComplete);
+        telemetry.addData("Iterations:", iterations);
         telemetry.update();
         inputHandler.loop();
     }
 
     @Override
-    public void start() { runtime.reset(); }
+    public void start() {
+        setPosition(POSITION.SET_START);
+        runtime.reset();
+    }
 
     @Override
     public void loop() {
-        handleInput();
+
+        if (!handleInput()) stop();
+
+        or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+
+        headingError = or.thirdAngle - globalIMUHeading;
+        if(headingError > Math.PI) headingError -= 2*Math.PI;
+        else if(headingError < -Math.PI) headingError += 2*Math.PI;
+
+//        telemetry.addData("error: ", headingError);
+
+        //Main Drive Update Code: :)
+        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
+
+        reportStartEnd();
     }
 
     @Override
@@ -94,39 +129,105 @@ public class MecanumTeleOpSandbox extends OpMode
         telemetry.update();
     }
 
-    private void handleInput() {
+    private boolean handleInput() {
         inputHandler.loop();
 
         if (inputHandler.up("D1:START")) {
             imu.resetYaw();
-            telemetry.addData("Reset Yaw", "");
+            telemetry.addLine("Reset Yaw");
             telemetry.update();
-            inputTimer.reset();
+        }
+
+        if (inputHandler.up("D1:X")) {
+            stopMoving = true;
+            telemetry.addLine("Robot movement is aborted!");
+            telemetry.update();
+        }
+
+        if (inputHandler.up("D1:LB")) {
+            setPosition(POSITION.SET_START);
+        } else if (inputHandler.up("D1:RB")) {
+            setPosition(POSITION.SET_END);
+        }
+
+        if (inputHandler.up("D1:LT")) {
+            moveBack();
+        } else if (inputHandler.up("D1:RT")) {
+            moveOut();
         }
 
         if (inputHandler.up("D1:A")) {
-            moveFromWallToSubmersible();
-            inputTimer.reset();
+            for (int i= 0 ; i<iterations ; i++) {
+                moveOut();
+                sleep(100);
+                moveBack();
+                sleep(100);
+            }
         }
 
-        if (inputHandler.up("D1:B")) {
-            moveFromSubmersibleToWall();
-            inputTimer.reset();
-        }
+        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+        return true;
+    }
 
+    private void moveOut() {
+//        if (currentPose!=getPosition()) {
+            thisAction = drive.actionBuilder(newStart)
+                    .strafeToConstantHeading(newEnd.position)
+                    .build();
+            Actions.runBlocking(thisAction);
+//        }
+        currentPose = getPosition();
+    }
+
+    private void moveBack() {
+//        if (currentPose!=getPosition()) {
+            thisAction = drive.actionBuilder(newEnd)
+                    .strafeToConstantHeading(newStart.position)
+                    .build();
+            Actions.runBlocking(thisAction);
+//        }
+        currentPose = getPosition();
+    }
+
+    Pose2d getPosition() {
+        drive.updatePoseEstimate();
+        return new Pose2d( drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble() );
+    }
+
+    double convertAngle( Pose2d position ) {
+        double angleRadians = Math.atan2(position.heading.imag, position.heading.real);
+        return Math.toDegrees((angleRadians));
+    }
+
+    void reportStartEnd() {
+        if (newStart!=null) {
+            @SuppressLint("DefaultLocale")
+            String start = "X: " + String.format("%.2f", newStart.position.x) + ", " +
+                    "Y: " + String.format("%.2f", newStart.position.y);
+            telemetry.addLine("Start - " + start);
+        }
+        if (newEnd!=null) {
+            @SuppressLint("DefaultLocale")
+            String end =   "X: " + String.format("%.2f", newEnd.position.x) + ", " +
+                    "Y: " + String.format("%.2f", newEnd.position.y);
+            telemetry.addLine("End   - " + end);
+        }
         telemetry.update();
     }
-        private void moveFromWallToSubmersible() {
-        Action stabilizerAction = drive.actionBuilder(startPose.toPose2d())
-                    .strafeToLinearHeading(stabilizerPose.toPose2d().position,stabilizerPose.toPose2d().heading)
-                    .build();
-        Actions.runBlocking(stabilizerAction);
+
+    void setPosition( POSITION pos ) {
+        if(pos==POSITION.SET_START) {
+            newStart = getPosition();
+        } else if(pos==POSITION.SET_END) {
+            newEnd = getPosition();
+        }
     }
 
-    private void moveFromSubmersibleToWall() {
-        Action startAction = drive.actionBuilder(stabilizerPose.toPose2d())
-                    .strafeToLinearHeading(startPose.toPose2d().position,startPose.toPose2d().heading)
-                    .build();
-        Actions.runBlocking(startAction);
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
