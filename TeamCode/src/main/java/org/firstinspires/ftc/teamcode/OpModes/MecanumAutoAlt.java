@@ -21,8 +21,8 @@ public class MecanumAutoAlt extends LinearOpMode {
     public static boolean logDetails = false;
     public static double experimentalStartX = 8;
     public static double experimentalStartY = -56;
-    public static double specimenCollectionX = 8;
-    public static double specimenCollectionY = -28;
+    public static double specimenCollectionX = 44;
+    public static double specimenCollectionY = -56;
     public static double splineSetUpX = 32;
     public static double splineSetUpY = -30;
     public static double goToCollectionX = 40;
@@ -66,74 +66,74 @@ public class MecanumAutoAlt extends LinearOpMode {
                         .strafeTo(SpecimenCollectionPose.toPose2d().position)
                         .build()
         );
-        Actions.runBlocking(
-                drive.actionBuilder(SpecimenCollectionPose.toPose2d())
-                        .strafeTo(SplineSetUpPose.toPose2d().position)
-                        .build()
-        );
-        Actions.runBlocking(
-                drive.actionBuilder(SplineSetUpPose.toPose2d())
-                        .splineToConstantHeading(GoToCollection.toPose2d().position,goToCollectionTan)
-                        .build()
-        );
+//        Actions.runBlocking(
+//                drive.actionBuilder(SpecimenCollectionPose.toPose2d())
+//                        .strafeTo(SplineSetUpPose.toPose2d().position)
+//                        .build()
+//        );
+//        Actions.runBlocking(
+//                drive.actionBuilder(SplineSetUpPose.toPose2d())
+//                        .splineToConstantHeading(GoToCollection.toPose2d().position,goToCollectionTan)
+//                        .build()
+//        );
 
 //        Actions.runBlocking(
 //                drive.actionBuilder(startPose.toPose2d())
 //                        .strafeTo(LineUpPushPoseY.toPose2d().position)
 //                        .build()
 //        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(GoToCollection.toPose2d())
-                    .strafeTo(LineUpPushPoseX.toPose2d().position)
-                    .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(LineUpPushPoseX.toPose2d())
-                        .strafeTo(PushPose.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(PushPose.toPose2d())
-                    .strafeTo(LineUpPushPoseX.toPose2d().position)
-                    .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(LineUpPushPoseX.toPose2d())
-                        .strafeTo(LineUpPushPoseX2.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(LineUpPushPoseX2.toPose2d())
-                        .strafeTo(PushPose2.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(PushPose2.toPose2d())
-                        .strafeTo(LineUpPushPoseX2.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(LineUpPushPoseX2.toPose2d())
-                        .strafeTo(LineUpPushPoseX3.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        Actions.runBlocking(
-                drive.actionBuilder(LineUpPushPoseX3.toPose2d())
-                        .strafeTo(PushPose3.toPose2d().position)
-                        .build()
-        );
-        Telemetry();
-        telemetry.addData("Time: ",autoTimer.seconds());
-        telemetry.update();
-        sleep(2000);
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(GoToCollection.toPose2d())
+//                    .strafeTo(LineUpPushPoseX.toPose2d().position)
+//                    .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(LineUpPushPoseX.toPose2d())
+//                        .strafeTo(PushPose.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(PushPose.toPose2d())
+//                    .strafeTo(LineUpPushPoseX.toPose2d().position)
+//                    .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(LineUpPushPoseX.toPose2d())
+//                        .strafeTo(LineUpPushPoseX2.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(LineUpPushPoseX2.toPose2d())
+//                        .strafeTo(PushPose2.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(PushPose2.toPose2d())
+//                        .strafeTo(LineUpPushPoseX2.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(LineUpPushPoseX2.toPose2d())
+//                        .strafeTo(LineUpPushPoseX3.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        Actions.runBlocking(
+//                drive.actionBuilder(LineUpPushPoseX3.toPose2d())
+//                        .strafeTo(PushPose3.toPose2d().position)
+//                        .build()
+//        );
+//        Telemetry();
+//        telemetry.addData("Time: ",autoTimer.seconds());
+//        telemetry.update();
+//        sleep(2000);
     }
 
     public void Telemetry(){

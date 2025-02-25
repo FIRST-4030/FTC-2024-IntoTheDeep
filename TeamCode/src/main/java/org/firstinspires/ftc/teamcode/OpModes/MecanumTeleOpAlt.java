@@ -38,14 +38,17 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.LogFile;
 import org.firstinspires.ftc.teamcode.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.InputHandler;
+import org.firstinspires.ftc.teamcode.math.maths.vectors.Vector3d;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -72,10 +75,20 @@ public class MecanumTeleOpAlt extends OpMode
     public static double startY = 0;
     public static double targetX = 40;
     public static double targetY = 0;
+    Vector3d mecanumController;
     NewMecanumDrive drive;
     InputHandler inputHandler;
     LogFile detailsLog;
     public static boolean logDetails = false;
+    double driveCoefficient = 0.75;
+    boolean resetIMU = false;
+    double[] dpadPowerArray = new double[4];
+    double headingError = 0;
+    double powerCoefficient = 1;
+    boolean precisionDrive = false;
+    IMU imu;
+    Orientation or;
+    double globalIMUHeading;
 
     Pose2dWrapper startPose = new Pose2dWrapper(startX, startY, Math.toRadians(90));
     Pose2dWrapper targetPose = new Pose2dWrapper(targetX, targetY, Math.toRadians(90));
@@ -85,12 +98,15 @@ public class MecanumTeleOpAlt extends OpMode
     @Override
     public void init() {
 
+        imu = hardwareMap.get(IMU.class, "imu");
+//        imu.resetYaw();
+ //       globalIMUHeading = or.thirdAngle;
+
         inputHandler = InputAutoMapper.normal.autoMap(this);
         telemetry.addData("Status", "Initialized");
-
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
-        drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 0), detailsLog, logDetails);
+        drive = new NewMecanumDrive(hardwareMap, new Pose2d(new Vector2d(0, 0), 90), detailsLog, logDetails);
         if (!drive.controlHub.isMacAddressValid()) {
             drive.controlHub.reportBadMacAddress(telemetry, hardwareMap);
             telemetry.update();
@@ -118,6 +134,7 @@ public class MecanumTeleOpAlt extends OpMode
     @Override
     public void loop() {
         handleInput();
+        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
     }
 
     /*
@@ -131,7 +148,17 @@ public class MecanumTeleOpAlt extends OpMode
         if(inputHandler.up("D1:Y")) {
             goToDeposit();
         }
+        if(inputHandler.up("D1:X")) {
+            goToCollection();
+        }
+        if(inputHandler.up("D1:A")){
+            goToDeposit();
+            sleep(1000);
+            goToCollection();
+        }
+        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
     }
+
     void goToDeposit()
     {
         Action action4 = drive.actionBuilder(startPose.toPose2d())
@@ -146,5 +173,12 @@ public class MecanumTeleOpAlt extends OpMode
                 .strafeToLinearHeading(startPose.toPose2d().position, startPose.toPose2d().heading)
                 .build();
         Actions.runBlocking(action5);
+    }
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
