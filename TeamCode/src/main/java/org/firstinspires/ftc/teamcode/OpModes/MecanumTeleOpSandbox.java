@@ -30,6 +30,7 @@ public class MecanumTeleOpSandbox extends OpMode
     public static boolean logDetails = true;
 
     enum POSITION { SET_START, SET_END }
+    enum LAST_ACTION { TBD, LT, RT, ITERATING }
 
     IMU imu;
     Orientation or;
@@ -46,18 +47,17 @@ public class MecanumTeleOpSandbox extends OpMode
     double[] dpadPowerArray = new double[4];
     double powerCoefficient = 1;
     boolean precisionDrive = false;
-    double driveCoefficient = 0.65;
+    double driveCoefficient = 1;
     Pose2d newStart = null;
     Pose2d newEnd = null;
-    Pose2d currentPose = null;
     int iterations = 0;
-    boolean stopMoving = false;
+    LAST_ACTION lastAction = LAST_ACTION.TBD;
 
     @Override
     public void init() {
 
         imu = hardwareMap.get(IMU.class, "imu");
-        runtime.reset();
+        imu.resetYaw();
 
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
@@ -79,9 +79,9 @@ public class MecanumTeleOpSandbox extends OpMode
 
         telemetry.addData("DPAD_UP: ", "increments 'iterations'");
         telemetry.addData("DPAD_DOWN: ", "decrements 'iterations'");
-        telemetry.addData("A: ", "Moves robot 'iterations' times");
-        telemetry.addData("X: ", "Stops auto movement");
-        telemetry.addData("Y: ", "Locks in values");
+        telemetry.addData("B: ", "Move to target");
+        telemetry.addData("X: ", "Move to origin");
+        telemetry.addData("Y: ", "Moves robot 'iterations' times");
 
         if (inputHandler.up("D1:DPAD_UP")) {
             iterations++;
@@ -110,6 +110,7 @@ public class MecanumTeleOpSandbox extends OpMode
         if (!handleInput()) stop();
 
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+        globalIMUHeading = or.thirdAngle;
 
         headingError = or.thirdAngle - globalIMUHeading;
         if(headingError > Math.PI) headingError -= 2*Math.PI;
@@ -123,14 +124,10 @@ public class MecanumTeleOpSandbox extends OpMode
         reportStartEnd();
     }
 
-    @Override
-    public void stop() {
-        telemetry.addData("Job completed!", "");
-        telemetry.update();
-    }
-
     private boolean handleInput() {
         inputHandler.loop();
+//        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+        mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
 
         if (inputHandler.up("D1:START")) {
             imu.resetYaw();
@@ -138,10 +135,16 @@ public class MecanumTeleOpSandbox extends OpMode
             telemetry.update();
         }
 
-        if (inputHandler.up("D1:X")) {
-            stopMoving = true;
-            telemetry.addLine("Robot movement is aborted!");
-            telemetry.update();
+        if (inputHandler.up("D1:Y")) {
+            if (lastAction!=LAST_ACTION.ITERATING) {
+                for (int i= 0 ; i<iterations ; i++) {
+                    moveOut();
+                    sleep(100);
+                    moveBack();
+                    sleep(100);
+                }
+            }
+            lastAction = LAST_ACTION.ITERATING;   // Prevent robot from moving when it is already there
         }
 
         if (inputHandler.up("D1:LB")) {
@@ -151,42 +154,13 @@ public class MecanumTeleOpSandbox extends OpMode
         }
 
         if (inputHandler.up("D1:LT")) {
-            moveBack();
+            if (lastAction!=LAST_ACTION.LT) moveBack();
+            lastAction = LAST_ACTION.LT;   // Prevent robot from moving when it is already there
         } else if (inputHandler.up("D1:RT")) {
-            moveOut();
+            if (lastAction!=LAST_ACTION.RT) moveOut();
+            lastAction = LAST_ACTION.RT;   // Prevent robot from moving when it is already there
         }
-
-        if (inputHandler.up("D1:A")) {
-            for (int i= 0 ; i<iterations ; i++) {
-                moveOut();
-                sleep(100);
-                moveBack();
-                sleep(100);
-            }
-        }
-
-        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
         return true;
-    }
-
-    private void moveOut() {
-//        if (currentPose!=getPosition()) {
-            thisAction = drive.actionBuilder(newStart)
-                    .strafeToConstantHeading(newEnd.position)
-                    .build();
-            Actions.runBlocking(thisAction);
-//        }
-        currentPose = getPosition();
-    }
-
-    private void moveBack() {
-//        if (currentPose!=getPosition()) {
-            thisAction = drive.actionBuilder(newEnd)
-                    .strafeToConstantHeading(newStart.position)
-                    .build();
-            Actions.runBlocking(thisAction);
-//        }
-        currentPose = getPosition();
     }
 
     Pose2d getPosition() {
@@ -194,22 +168,33 @@ public class MecanumTeleOpSandbox extends OpMode
         return new Pose2d( drive.pose.position.x, drive.pose.position.y, drive.pose.heading.toDouble() );
     }
 
-    double convertAngle( Pose2d position ) {
-        double angleRadians = Math.atan2(position.heading.imag, position.heading.real);
-        return Math.toDegrees((angleRadians));
+    private void moveBack() {
+        thisAction = drive.actionBuilder(newEnd)
+                .strafeToConstantHeading(newStart.position)
+                .build();
+        Actions.runBlocking(thisAction);
+    }
+
+    private void moveOut() {
+        thisAction = drive.actionBuilder(newStart)
+                .strafeToConstantHeading(newEnd.position)
+                .build();
+        Actions.runBlocking(thisAction);
     }
 
     void reportStartEnd() {
         if (newStart!=null) {
             @SuppressLint("DefaultLocale")
             String start = "X: " + String.format("%.2f", newStart.position.x) + ", " +
-                    "Y: " + String.format("%.2f", newStart.position.y);
+                           "Y: " + String.format("%.2f", newStart.position.y) + ", " +
+                           "Heading: " + String.format("%.2f", Math.toDegrees(newStart.heading.toDouble()));
             telemetry.addLine("Start - " + start);
         }
         if (newEnd!=null) {
             @SuppressLint("DefaultLocale")
-            String end =   "X: " + String.format("%.2f", newEnd.position.x) + ", " +
-                    "Y: " + String.format("%.2f", newEnd.position.y);
+            String end = "X: " + String.format("%.2f", newEnd.position.x) + ", " +
+                         "Y: " + String.format("%.2f", newEnd.position.y) + ", " +
+                         "Heading: " + String.format("%.2f", Math.toDegrees(newEnd.heading.toDouble()));
             telemetry.addLine("End   - " + end);
         }
         telemetry.update();
