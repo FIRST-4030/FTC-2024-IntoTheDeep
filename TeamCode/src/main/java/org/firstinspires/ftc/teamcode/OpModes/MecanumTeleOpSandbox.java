@@ -48,6 +48,8 @@ public class MecanumTeleOpSandbox extends OpMode
     double powerCoefficient = 1;
     boolean precisionDrive = false;
     double driveCoefficient = 1;
+    boolean useLeftStickToDrive = true;
+
     Pose2d newStart = null;
     Pose2d newEnd = null;
     int iterations = 0;
@@ -126,8 +128,11 @@ public class MecanumTeleOpSandbox extends OpMode
 
     private boolean handleInput() {
         inputHandler.loop();
-//        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
-        mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
+        if (useLeftStickToDrive) {
+            mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
+        } else {
+            mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+        }
 
         if (inputHandler.up("D1:START")) {
             imu.resetYaw();

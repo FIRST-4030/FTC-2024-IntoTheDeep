@@ -89,6 +89,7 @@ public class MecanumTeleOpAlt extends OpMode
     double headingError = 0;
     double powerCoefficient = 1;
     boolean precisionDrive = false;
+    boolean useLeftStickToDrive = true;
     IMU imu;
     Orientation or;
     double globalIMUHeading;
@@ -161,8 +162,12 @@ public class MecanumTeleOpAlt extends OpMode
     }
     void handleInput() {
         inputHandler.loop();
-//        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
-        mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
+        if (useLeftStickToDrive) {
+            mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
+        } else {
+            mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
+        }
+
         if(inputHandler.up("D1:Y")) {
             goToDeposit();
         }
